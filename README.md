@@ -38,6 +38,29 @@ Then open the repo in Claude Code and talk to it:
 
 Requires Python 3.9+. Standard library only — nothing to install.
 
+## Browse it as a website
+
+```bash
+python3 tools/build_site.py        # renders wiki/ into site/
+python3 -m http.server -d site     # then open http://localhost:8000
+```
+
+This exists because **GitHub's own markdown view can't render this wiki properly.**
+`[^citations]` render fine there, but `[[wikilinks]]` do not — that syntax belongs to
+GitHub *Wikis* and Obsidian, not repo markdown, so on GitHub they show as literal
+brackets and the link graph goes dead. Since the link graph *is* how you navigate a
+compiled wiki, that matters. `build_site.py` resolves them, and adds what the markdown
+can't carry: status badges, **backlinks** ("linked from") on every page, and a
+clickable [link graph](tools/build_site.py).
+
+To publish: enable Pages in **Settings → Pages → Source: GitHub Actions**, then merge to
+`main`. `.github/workflows/pages.yml` builds and deploys — but only after
+`test_wiki.py` and `wiki.py lint` pass. **A wiki that fails its own invariants does not
+get published**, which is the whole argument for having invariants.
+
+Broken links render in red rather than silently disappearing, so the site shows you the
+same defects the linter does.
+
 ## What's here
 
 | path | what it is |
@@ -49,6 +72,8 @@ Requires Python 3.9+. Standard library only — nothing to install.
 | `wiki/log.md` | append-only record of every ingest and query |
 | `tools/wiki.py` | lint · status · index · graph · stats · new |
 | `tools/test_wiki.py` | negative tests for the linter |
+| `tools/build_site.py` | renders `wiki/` to a static site for GitHub Pages |
+| `.github/workflows/pages.yml` | lint-gated build and deploy |
 | `.claude/skills/` | the four operations: ingest, query, lint |
 
 ## What makes this more than a folder of markdown

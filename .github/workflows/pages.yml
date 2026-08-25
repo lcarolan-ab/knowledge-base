@@ -1,0 +1,54 @@
+name: build and publish wiki
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow one concurrent deployment; don't cancel a run mid-deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # The linter is the gate. Publishing a wiki with broken links or
+      # uningested sources would defeat the point of having invariants.
+      - name: Test the linter
+        run: python3 tools/test_wiki.py
+
+      - name: Lint the wiki
+        run: python3 tools/wiki.py lint
+
+      - name: Check nothing needs recompiling
+        run: python3 tools/wiki.py status
+
+      - name: Build site
+        run: python3 tools/build_site.py --out site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
