@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LLM wiki</title>
+<meta name="description" content="A working LLM wiki: browse, query, and compile new sources into a knowledge base that keeps its own invariants.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <a class="brand" href="#/">📚 <b>LLM wiki</b></a>
+    <nav class="tabs">
+      <a href="#/" data-tab="read">Read</a>
+      <a href="#/ask" data-tab="ask">Ask</a>
+      <a href="#/ingest" data-tab="ingest">Ingest</a>
+      <a href="#/lint" data-tab="lint">Lint</a>
+      <a href="#/sources" data-tab="sources">Sources</a>
+    </nav>
+    <div class="bar-right">
+      <span id="mode-chip" class="chip" title="Which compiler backend is active"></span>
+      <button id="open-settings" class="btn ghost">Settings</button>
+    </div>
+  </div>
+  <div id="dirty-bar" class="dirty" hidden>
+    <span id="dirty-text"></span>
+    <span class="spacer"></span>
+    <button id="export-btn" class="btn small">Export changed files</button>
+    <button id="reset-btn" class="btn small ghost">Discard local changes</button>
+  </div>
+</header>
+
+<main id="view"><div class="loading">Loading wiki…</div></main>
+
+<dialog id="settings">
+  <form method="dialog" class="sheet">
+    <h2>Settings</h2>
+
+    <p class="muted">
+      This page is static — there is no server behind it. To actually run the
+      compiler you either bring your own API key, or point it at a backend you
+      control.
+    </p>
+
+    <label class="field">
+      <span>Compiler backend</span>
+      <select id="mode-select">
+        <option value="demo">Demo — canned responses, no key, no network</option>
+        <option value="direct">Direct — this browser calls the Claude API with your key</option>
+        <option value="proxy">Proxy — your own endpoint holds the key</option>
+      </select>
+    </label>
+
+    <div id="key-field" class="field" hidden>
+      <label for="api-key"><span>Anthropic API key</span></label>
+      <input id="api-key" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+      <p class="warn">
+        <b>Read this before pasting a key.</b> In Direct mode the key is stored in
+        this browser's <code>localStorage</code> and sent from the page itself, so
+        anyone who can open devtools on this device can read it. That is acceptable
+        for a personal tool with your own key — it is not acceptable for a key with
+        broad access, a shared machine, or a key you also use in production. Use a
+        dedicated, rotatable key, or use Proxy mode. The key is never sent anywhere
+        except <code>api.anthropic.com</code>.
+      </p>
+    </div>
+
+    <div id="proxy-field" class="field" hidden>
+      <label for="proxy-url"><span>Proxy endpoint URL</span></label>
+      <input id="proxy-url" type="url" placeholder="https://your-worker.workers.dev" spellcheck="false">
+      <p class="muted">
+        POSTs <code>{system, user, max_tokens, model}</code> and reads back streamed
+        text or <code>{text}</code>. A ready-to-deploy Cloudflare Worker is in
+        <code>proxy/worker.js</code> in the repo.
+      </p>
+    </div>
+
+    <div class="row">
+      <button class="btn" value="save" id="save-settings">Save</button>
+      <button class="btn ghost" value="cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<footer id="foot">
+  <div class="bar" style="display:block">
+    Compiled from <code>raw/</code> by an LLM; consistency checked by the same rules as
+    <code>tools/wiki.py lint</code>. The linter checks that links resolve and citations
+    exist — <b>not</b> that any page is true.
+    <span id="foot-links"></span>
+  </div>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

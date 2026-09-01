@@ -1,11 +1,11 @@
-name: build and publish wiki
+name: build and publish the LLM wiki
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
-# Allow one concurrent deployment; don't cancel a run mid-deploy.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+        with: { python-version: '3.11' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
 
-      # The linter is the gate. Publishing a wiki with broken links or
-      # uningested sources would defeat the point of having invariants.
-      - name: Test the linter
+      # The linters are the gate. Publishing a wiki that fails its own
+      # invariants would defeat the point of having them.
+      - name: Test the Python tooling
         run: python3 tools/test_wiki.py
 
       - name: Lint the wiki
@@ -36,14 +36,27 @@ jobs:
       - name: Check nothing needs recompiling
         run: python3 tools/wiki.py status
 
-      - name: Build site
-        run: python3 tools/build_site.py --out site
+      - name: Rebuild the app's seed data from wiki/
+        run: python3 tools/build_app.py
+
+      - name: Test the app logic
+        run: node tools/test_app.mjs
+
+      - name: Build the app (site root)
+        run: |
+          mkdir -p site
+          cp -R app/. site/
+          touch site/.nojekyll
+
+      - name: Build the no-JavaScript archive (site/read)
+        run: python3 tools/build_site.py --out site/read
 
       - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
+        with: { path: site }
 
   deploy:
+    # Only publish from main; pull requests run the checks above and stop.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

@@ -28,6 +28,7 @@ judge both the idea and the machinery at once.
 python3 tools/wiki.py lint     # check the build
 python3 tools/wiki.py status   # what needs recompiling
 python3 tools/test_wiki.py     # 20 tests proving the linter catches violations
+node tools/test_app.mjs        # 28 tests for the app logic
 ```
 
 Then open the repo in Claude Code and talk to it:
@@ -38,28 +39,62 @@ Then open the repo in Claude Code and talk to it:
 
 Requires Python 3.9+. Standard library only — nothing to install.
 
-## Browse it as a website
+## Run it as a web app
+
+The repo ships a **working LLM wiki** — not a rendering of one. Browse, search,
+ask it questions, and compile new sources into it, in the browser.
 
 ```bash
-python3 tools/build_site.py        # renders wiki/ into site/
-python3 -m http.server -d site     # then open http://localhost:8000
+python3 tools/build_app.py                 # bundle wiki/ + raw/ into app seed data
+python3 -m http.server -d app 8765         # then open http://localhost:8765
 ```
 
-This exists because **GitHub's own markdown view can't render this wiki properly.**
-`[^citations]` render fine there, but `[[wikilinks]]` do not — that syntax belongs to
-GitHub *Wikis* and Obsidian, not repo markdown, so on GitHub they show as literal
-brackets and the link graph goes dead. Since the link graph *is* how you navigate a
-compiled wiki, that matters. `build_site.py` resolves them, and adds what the markdown
-can't carry: status badges, **backlinks** ("linked from") on every page, and a
-clickable [link graph](tools/build_site.py).
+It opens in **demo mode**: canned compiler responses, no API key, no network. Every
+feature works — including a prepared adversarial ingest. Open Settings to connect a
+real compiler.
 
-To publish: enable Pages in **Settings → Pages → Source: GitHub Actions**, then merge to
-`main`. `.github/workflows/pages.yml` builds and deploys — but only after
-`test_wiki.py` and `wiki.py lint` pass. **A wiki that fails its own invariants does not
-get published**, which is the whole argument for having invariants.
+| tab | what it does |
+|---|---|
+| **Read** | the compiled pages, with resolved `[[wikilinks]]`, status badges and backlinks |
+| **Ask** | a question answered *from the compiled pages*, with citations carried through |
+| **Ingest** | paste a source; the compiler proposes edits across many pages, shows a diff, and **lints the proposal before you can apply it** |
+| **Lint** | the same invariants as `tools/wiki.py`, run client-side |
 
-Broken links render in red rather than silently disappearing, so the site shows you the
-same defects the linter does.
+Anything you compile in the browser is layered over the shipped wiki in
+`localStorage` and can be exported as `.md` files to commit back. A static page
+cannot write to your git history, so the loop ends with an export rather than
+pretending otherwise.
+
+### The API key question
+
+GitHub Pages is **static hosting — no server, no secrets**. So a genuinely working
+compiler there has two honest options, and the app supports both:
+
+- **Direct** — the visitor supplies their own key; the browser calls the Claude API
+  itself. Anthropic's SDK gates this behind `dangerouslyAllowBrowser` because the key
+  is readable by anyone with devtools on that device, and scopes it to internal or
+  personal tools. That is what this is. **Never deploy a build with your own key in
+  it** — there is nowhere on a static page to hide one.
+- **Proxy** — point the app at an endpoint you control that holds the key
+  server-side. [`proxy/worker.js`](proxy/worker.js) is a ready-to-deploy Cloudflare
+  Worker; set the origin allowlist, `wrangler secret put ANTHROPIC_API_KEY`, deploy,
+  and paste the URL into Settings. Nothing else changes. This is the path to a real
+  deployment with users.
+
+Model: `claude-opus-5` with adaptive thinking, streamed.
+
+## Publish it
+
+Enable Pages under **Settings → Pages → Source: GitHub Actions**, then merge to
+`main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes:
+
+- `/` — the app
+- `/read/` — a no-JavaScript static rendering of the same wiki, for reading and indexing
+
+The deploy is **lint-gated**: `test_wiki.py`, `wiki.py lint`, `wiki.py status` and
+`test_app.mjs` all run first. A wiki that fails its own invariants does not get
+published, which is the whole argument for having invariants. Pull requests run the
+checks without deploying.
 
 ## What's here
 
@@ -72,7 +107,11 @@ same defects the linter does.
 | `wiki/log.md` | append-only record of every ingest and query |
 | `tools/wiki.py` | lint · status · index · graph · stats · new |
 | `tools/test_wiki.py` | negative tests for the linter |
-| `tools/build_site.py` | renders `wiki/` to a static site for GitHub Pages |
+| `app/` | the web app — Read, Ask, Ingest, Lint |
+| `tools/build_app.py` | bundles `wiki/` + `raw/` into the app's seed data |
+| `tools/test_app.mjs` | 28 tests for the app logic and its linter |
+| `tools/build_site.py` | renders `wiki/` to the static no-JS archive |
+| `proxy/worker.js` | optional Cloudflare Worker so the key lives server-side |
 | `.github/workflows/pages.yml` | lint-gated build and deploy |
 | `.claude/skills/` | the four operations: ingest, query, lint |
 
