@@ -10,7 +10,7 @@ format: pdf
 pages: 9
 file: files/insurance-review-family-2025.pdf
 author: Liz Goldenberg, CPA
-author_role: Client team lead
+author_role: Principal
 contributors:
   - Gavin Coveney, JD
 ---
