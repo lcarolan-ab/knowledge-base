@@ -3,16 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Deliverables library</title>
+<title>ArchBridge Deliverables</title>
 <meta name="description" content="Ask what the firm has already made. Get the matching deliverables and the people who made them.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='20' width='80' height='60' rx='8' fill='%231d5c7a'/><rect x='22' y='34' width='56' height='6' rx='3' fill='white'/><rect x='22' y='48' width='40' height='6' rx='3' fill='white' opacity='.7'/></svg>">
+<link rel="icon" href="ARCH_ID_2C.png" type="image/png">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 
-<header>
-  <div class="bar">
-    <a class="brand" href="#/">Deliverables library</a>
+<header class="brandbar">
+  <a href="#/"><img src="ARCH_ID_2C_Horizontal_FullName.png" alt="ArchBridge Family Office"></a>
+</header>
+
+<div class="panel">
+  <div class="toolbar">
     <nav class="tabs">
       <a href="#/" data-tab="ask">Ask</a>
       <a href="#/browse" data-tab="browse">Browse</a>
@@ -23,9 +26,9 @@
       <button id="open-settings" class="btn ghost small">Settings</button>
     </div>
   </div>
-</header>
 
-<main id="view"><div class="loading">Loading the library…</div></main>
+  <main id="view"><div class="loading">Loading the library…</div></main>
+</div>
 
 <dialog id="settings">
   <form method="dialog" class="sheet">
@@ -64,10 +67,8 @@
 </dialog>
 
 <footer id="foot">
-  <div class="bar" style="display:block">
-    Demo data. Every client, deliverable and person here is synthetic.
-    <span id="foot-links"></span>
-  </div>
+  Demo data. Every client, deliverable and person here is synthetic.
+  <span id="foot-links"></span>
 </footer>
 
 <script src="config.js"></script>
