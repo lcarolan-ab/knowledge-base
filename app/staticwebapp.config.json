@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/staticwebapp.config.json",
+  "routes": [
+    { "route": "/api/*", "allowedRoles": ["authenticated"], "methods": ["POST"] },
+    { "route": "/.auth/login/github", "statusCode": 404 },
+    { "route": "/.auth/login/twitter", "statusCode": 404 },
+    { "route": "/*", "allowedRoles": ["authenticated"] }
+  ],
+  "responseOverrides": {
+    "401": { "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer", "statusCode": 302 }
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/data/*", "/lib/*", "/*.css", "/*.js", "/*.json"]
+  },
+  "globalHeaders": {
+    "content-security-policy": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://graph.microsoft.com https://login.microsoftonline.com https://api.anthropic.com; frame-src https://login.microsoftonline.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff"
+  },
+  "platform": { "apiRuntime": "node:20" }
+}

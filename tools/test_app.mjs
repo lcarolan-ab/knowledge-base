@@ -1,244 +1,149 @@
-// test_app.mjs — logic tests for the web app. No browser, no network, no deps.
+// test_app.mjs — logic tests for the app. No browser, no network, no dependencies.
 //
 //   node tools/test_app.mjs
 //
-// Covers the parts that would silently rot: that the browser linter agrees with
-// the Python one, and that an ingest proposal actually applies to a clean wiki.
+// Covers what would silently rot: that the search understands the taxonomy's
+// synonyms, that the headline question finds the right deck, that model replies
+// parse, and that SharePoint items map to catalogue items.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const W = await import(path.join(ROOT, 'app/lib/wiki.js'));
+const S = await import(path.join(ROOT, 'app/lib/search.js'));
 const P = await import(path.join(ROOT, 'app/lib/provider.js'));
-const D = await import(path.join(ROOT, 'app/lib/demo.js'));
-
-const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'app/data/wiki.json'), 'utf8'));
+const SP = await import(path.join(ROOT, 'app/lib/sharepoint.js'));
+const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'app/data/library.json'), 'utf8'));
 
 let pass = 0, fail = 0;
-function test(name, fn) {
+const test = (name, fn) => {
   try { fn(); console.log(`  ok    ${name}`); pass++; }
   catch (e) { console.log(`  FAIL  ${name}\n          ${e.message}`); fail++; }
-}
-function eq(a, b, msg) {
-  if (a !== b) throw new Error(`${msg || 'not equal'}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`);
-}
-function ok(v, msg) { if (!v) throw new Error(msg || 'expected truthy'); }
-
-const clonePages = () => data.pages.map(p => ({ ...p, meta: { ...p.meta } }));
-
-console.log('\nseed data');
-test('the shipped wiki lints clean in the browser linter', () => {
-  const r = W.lint(clonePages(), data.sources);
-  eq(r.errors.length, 0, `errors: ${r.errors.join('; ')}`);
-  eq(r.warnings.length, 0, `warnings: ${r.warnings.join('; ')}`);
-});
-test('nothing is stale or uningested', () => {
-  const s = W.staleness(clonePages(), data.sources);
-  eq(s.stale.length, 0); eq(s.uningested.length, 0);
-});
-test('every page renders with no unresolved wikilinks', () => {
-  const pages = new Map(data.pages.map(p => [p.slug, p]));
-  for (const p of data.pages) {
-    const { html } = W.renderMarkdown(p.body, { pages });
-    ok(!html.includes('class="broken"'), `broken link in ${p.slug}`);
-  }
-});
-
-console.log('\nfrontmatter');
-test('parse → serialize → parse round-trips', () => {
-  const page = { meta: { title: 'T', type: 'topic', status: 'contested',
-    updated: '2026-09-01', sources: ['a', 'b'] }, body: '# T\n\nbody\n' };
-  const { meta } = W.parseFrontmatter(W.serialize(page));
-  eq(meta.title, 'T'); eq(meta.status, 'contested');
-  eq(JSON.stringify(meta.sources), JSON.stringify(['a', 'b']));
-});
-test('empty inline list parses as []', () => {
-  const { meta } = W.parseFrontmatter('---\ntitle: X\nsources: []\n---\nbody\n');
-  eq(Array.isArray(meta.sources), true); eq(meta.sources.length, 0);
-});
-test('footnote definitions are not counted as citations', () => {
-  const body = 'Claim [^a].\n\n[^a]: raw/a.md\n';
-  eq(W.citesOf(body).length, 1);
-});
-test('wikilinks inside code fences are ignored', () => {
-  eq(W.linksOf('```\n[[not/real]]\n```\n[[real/one]]\n').length, 1);
-});
-
-console.log('\nlint catches violations');
-const SRC = [{ id: 'src-a', file: 'raw/a.md', added: '2026-01-01' }];
-const base = () => [{
-  slug: 'a', file: 'wiki/a.md',
-  meta: { title: 'A', type: 'topic', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
-  body: 'Claim [^src-a]. See [[b]] [[c]] [[d]].\n\n[^src-a]: raw/a.md\n',
-}, ...['b', 'c', 'd'].map(s => ({
-  slug: s, file: `wiki/${s}.md`,
-  meta: { title: s, type: 'topic', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
-  body: `Claim [^src-a]. See [[a]] [[b]] [[c]] [[d]].\n\n[^src-a]: raw/a.md\n`,
-}))];
-const flags = (pages, sources, needle, level = 'errors') => {
-  const r = W.lint(pages, sources || SRC);
-  ok(r[level].join('\n').includes(needle),
-    `expected ${level} containing "${needle}", got: ${r[level].join(' | ') || '(none)'}`);
 };
+const eq = (a, b, m) => { if (a !== b) throw new Error(`${m || 'not equal'}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`); };
+const ok = (v, m) => { if (!v) throw new Error(m || 'expected truthy'); };
+const top = q => S.search(data, q).results[0]?.item.id;
 
-test('clean fixture passes', () => eq(W.lint(base(), SRC).errors.length, 0));
-test('broken link', () => {
-  const p = base(); p[0].body = p[0].body.replace('[[b]]', '[[nope]]');
-  flags(p, null, 'broken link [[nope]]');
-});
-test('citation with no source', () => {
-  const p = base(); p[0].body = p[0].body.replace('[^src-a].', '[^ghost].');
-  flags(p, null, 'citation [^ghost] has no source');
-});
-test('citation missing from frontmatter', () => {
-  const p = base(); p[0].meta.sources = [];
-  flags(p, null, 'omits it from frontmatter sources');
-});
-test('contested without a Contradictions section', () => {
-  const p = base(); p[0].meta.status = 'contested';
-  flags(p, null, "requires a '## Contradictions' section");
-});
-test('contested WITH a Contradictions section passes', () => {
-  const p = base();
-  p[0].meta.status = 'contested';
-  p[0].body = '## Contradictions\n\n' + p[0].body;
-  ok(!W.lint(p, SRC).errors.join('\n').includes('Contradictions'));
-});
-test('stale page (source newer than page)', () => {
-  flags(base(), [{ id: 'src-a', file: 'raw/a.md', added: '2026-06-01' }], "stale: source 'src-a'");
-});
-test('uningested source', () => {
-  flags(base(), [...SRC, { id: 'never', file: 'raw/n.md', added: '2026-01-01' }], 'not ingested');
-});
-test('bad status value', () => {
-  const p = base(); p[0].meta.status = 'pretty-sure';
-  flags(p, null, "status 'pretty-sure' not in");
-});
-test('superseded needs a forward link', () => {
-  const p = base();
-  p.push({ slug: 'z', file: 'wiki/z.md',
-    meta: { title: 'Z', type: 'topic', status: 'superseded', updated: '2026-02-01', sources: [] },
-    body: 'nothing\n' });
-  flags(p, null, 'must link forward');
-});
-test('orphan page warns', () => {
-  const p = base();
-  p.push({ slug: 'lonely', file: 'wiki/lonely.md',
-    meta: { title: 'L', type: 'topic', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
-    body: 'Claim [^src-a]. [[a]] [[b]] [[c]]\n\n[^src-a]: raw/a.md\n' });
-  flags(p, null, 'orphan', 'warnings');
-});
-
-console.log('\ningest');
-const demoReply = () => D.demoIngestReply(D.DEMO_SOURCE.added, clonePages());
-test('the demo reply parses into edits', () => {
-  const r = P.parseEdits(demoReply());
-  ok(r.ok, r.error); eq(r.data.edits.length, 4);
-  ok(r.data.log, 'no log line'); ok(r.data.contradictions.length >= 1);
-});
-test('malformed replies fail gracefully, never throw', () => {
-  for (const bad of ['no json here', '```json\n{oops\n```', '', '```json\n{"edits":"nope"}\n```']) {
-    const r = P.parseEdits(bad);
-    eq(r.ok, false, `should not parse: ${bad.slice(0, 20)}`);
-    ok(typeof r.error === 'string' && r.error.length > 0);
+console.log('\ncatalogue');
+test('every item has a type, an audience, an author with an email, and an outline', () => {
+  for (const it of data.items) {
+    ok(it.type, `${it.id} has no type`); ok(it.audiences.length, `${it.id} has no audience`);
+    ok(/@/.test(it.author.email), `${it.id} author has no email`); ok(it.outline.length, `${it.id} has no outline`);
   }
 });
-test('the demo deliverable is dated today, so the proposal is never stale', () => {
-  eq(D.DEMO_SOURCE.added, new Date().toISOString().slice(0, 10));
-  const { data: d } = P.parseEdits(demoReply());
-  for (const e of d.edits) eq(e.updated, D.DEMO_SOURCE.added, `${e.slug} updated date`);
-});
-test('applying the demo ingest leaves the wiki lint-clean', () => {
-  const { data: d } = P.parseEdits(demoReply());
-  const pages = clonePages();
-  const sources = [...data.sources,
-    { ...D.DEMO_SOURCE, file: `raw/${D.DEMO_SOURCE.added}-${D.DEMO_SOURCE.id}.md` }];
-  for (const e of d.edits) {
-    const pg = { slug: e.slug, file: `wiki/${e.slug}.md`, body: e.body,
-      meta: { title: e.title, type: e.type, status: e.status, updated: e.updated, sources: e.sources } };
-    const i = pages.findIndex(p => p.slug === e.slug);
-    if (i >= 0) pages[i] = pg; else pages.push(pg);
-  }
-  const r = W.lint(pages, sources);
-  eq(r.errors.length, 0, `errors: ${r.errors.join('; ')}`);
-  eq(r.warnings.length, 0, `warnings: ${r.warnings.join('; ')}`);
-});
-test('the demo ingest marks the contradicted client page contested', () => {
-  const { data: d } = P.parseEdits(demoReply());
-  const contested = d.edits.filter(e => e.status === 'contested').map(e => e.slug);
-  ok(contested.includes('clients/abernathy-ruiz'), 'client page not contested');
-  const before = data.pages.find(p => p.slug === 'clients/abernathy-ruiz');
-  eq(before.meta.status, 'established', 'seed client page should start established');
-  for (const e of d.edits) {
-    if (e.status === 'contested') ok(/^##+\s*Contradictions/m.test(e.body),
-      `${e.slug} contested with no Contradictions section`);
-  }
-});
-test('the demo ingest touches several pages, not one', () => {
-  const { data: d } = P.parseEdits(demoReply());
-  ok(d.edits.length >= 3, `only ${d.edits.length} edits — that is filing, not compiling`);
-});
-test('every demo edit is a real change to an existing page', () => {
-  const { data: d } = P.parseEdits(demoReply());
-  for (const e of d.edits) {
-    const before = data.pages.find(p => p.slug === e.slug);
-    ok(before, `${e.slug} does not exist in the seed`);
-    ok(before.body !== e.body, `${e.slug} body unchanged — an anchor in demo.js no longer matches`);
-    ok(e.body.includes(`[^${D.DEMO_SOURCE.id}]`), `${e.slug} never cites the new deliverable`);
-  }
-});
-
-console.log('\nprompts');
-test('query prompt carries the wiki and forbids outside knowledge', () => {
-  const { system } = P.queryPrompt('q', data.pages, data.sources);
-  ok(system.includes('COMPILED WIKI'));
-  ok(system.includes('not from your own background knowledge'));
-  ok(system.includes('kessler-cash-flow-2026-05'), 'deliverable ids not listed');
-  ok(system.includes('Kessler family'), 'client metadata not carried into the prompt');
-});
-test('ingest prompt states the contradiction rule', () => {
-  const { system } = P.ingestPrompt('text', { id: 'x', title: 'T', added: '2026-09-01', capture: 'verbatim' },
-    data.pages, data.sources);
-  ok(system.toLowerCase().includes('contradict'));
-  ok(system.includes('"edits"'), 'no json contract');
-});
-test('demo router returns an honest miss for uncovered questions', () => {
-  ok(D.demoAnswer('best sourdough recipe').includes('cannot answer'));
-  ok(!D.demoAnswer('which clients have giving summaries?').includes('cannot answer'));
-});
-test('every canned answer cites only real deliverables and real pages', () => {
-  const ids = new Set(data.sources.map(s => s.id));
-  const slugs = new Set(data.pages.map(p => p.slug));
-  for (const q of ['philanthropic summaries', 'lake house', 'dining spend', 'concentrated stock',
-                   'which clients do we have']) {
-    const a = D.demoAnswer(q);
-    for (const m of a.matchAll(/\[\^([A-Za-z0-9._-]+)\]/g))
-      ok(m[1] === 'synthesis' || ids.has(m[1]), `"${q}" cites unknown ${m[1]}`);
-    const used = (a.match(/PAGES USED:\s*(.+)$/s) || [])[1] || '';
-    for (const s of used.split(',').map(x => x.trim()).filter(x => x && x !== 'none'))
-      ok(slugs.has(s), `"${q}" lists unknown page ${s}`);
+test('tags all come from the taxonomy', () => {
+  const aud = new Set(data.taxonomy.audiences.map(a => a.tag)), top = new Set(data.taxonomy.topics.map(t => t.tag));
+  for (const it of data.items) {
+    it.audiences.forEach(a => ok(aud.has(a), `${it.id}: audience ${a}`));
+    it.topics.forEach(t => ok(top.has(t), `${it.id}: topic ${t}`));
   }
 });
 
 console.log('\nsearch');
-test('search ranks the right page first', () => {
-  eq(W.search(data.pages, 'subscriptions')[0].page.slug, 'topics/unused-subscriptions');
+test('the headline question finds the new-grad card analysis first', () => {
+  eq(top('Have we ever done a credit card analysis for a new grad?'), 'cc-analysis-new-grad-2025');
 });
-test('empty query returns nothing', () => eq(W.search(data.pages, '  ').length, 0));
-test('deliverable search finds documents by client and type', () => {
-  const hits = W.searchSources(data.sources, 'Kessler cash flow');
-  ok(hits.length >= 2, 'expected both Kessler projections');
-  ok(hits.slice(0, 2).every(h => h.source.id.startsWith('kessler-cash-flow')),
-    `top hits: ${hits.slice(0, 2).map(h => h.source.id).join(', ')}`);
+test('synonyms: recent graduate, first job, entry level all mean new grad', () => {
+  for (const q of ['credit card work for a recent graduate', 'card strategy for someone in their first job',
+                   'credit cards, entry level client']) eq(top(q), 'cc-analysis-new-grad-2025', q);
 });
-test('deliverable search ignores stop words and matches plurals', () => {
-  const hits = W.searchSources(data.sources, 'which clients have philanthropic summaries?');
-  ok(hits.length >= 2, 'expected the two giving summaries');
-  ok(hits.slice(0, 2).every(h => h.source.deliverable === 'Philanthropic giving summary'),
-    `top hits: ${hits.slice(0, 2).map(h => h.source.id).join(', ')}`);
-  eq(W.searchSources(data.sources, 'which have the').length, 0);
+test('the parsed query names the type and audience it recognised', () => {
+  const { parsed } = S.search(data, 'credit card analysis for a new grad');
+  ok(parsed.types.includes('Credit card analysis')); ok(parsed.audiences.includes('new grad'));
+});
+test('a strong match is flagged strong; a related one is not', () => {
+  const { results } = S.search(data, 'credit card analysis for a new grad');
+  ok(results[0].strong, 'top result should be strong');
+  const retiree = results.find(r => r.item.id === 'cc-analysis-retired-couple-2026');
+  ok(!retiree || !retiree.strong, 'a retiree card analysis is not a strong match for a new grad');
+});
+test('audience-only questions work', () => {
+  const { results } = S.search(data, 'what do we have for doctors?');
+  ok(results.length >= 1); eq(results[0].item.id, 'student-loans-new-physician-2025');
+});
+test('topic phrasing works: company stock → concentrated stock', () => {
+  const ids = S.search(data, 'a founder with a lot of company stock').results.map(r => r.item.id);
+  ok(ids[0] === 'estate-review-founder-2026' || ids[0] === 'giving-summary-founder-foundation-2026', ids.join(','));
+});
+test('a question about nothing in the library returns no results', () => {
+  eq(S.search(data, 'sourdough starter').results.length, 0);
+  eq(S.search(data, 'have we ever').results.length, 0);
+});
+test('template answer says yes, no, or not exactly', () => {
+  ok(S.templateAnswer('q', S.search(data, 'credit card analysis for a new grad')).startsWith('Yes.'));
+  ok(S.templateAnswer('q', S.search(data, 'sourdough')).startsWith('No'));
+  ok(S.templateAnswer('q', S.search(data, 'cash flow for someone retiring to Portugal')).startsWith('Not exactly') ||
+     S.templateAnswer('q', S.search(data, 'cash flow for someone retiring to Portugal')).startsWith('Yes'));
+});
+test('people are ranked from the results and carry email', () => {
+  const ppl = S.people(S.search(data, 'credit card analysis for a new grad').results);
+  eq(ppl[0].email, 'priya.natarajan@example.com'); ok(ppl[0].items.length >= 1);
+});
+test('browse filters compose', () => {
+  eq(S.filterItems(data.items, { audience: 'new grad' }).length, 3);
+  eq(S.filterItems(data.items, { audience: 'new grad', type: 'Cash flow projection' }).length, 1);
+  eq(S.filterItems(data.items, { text: 'gala' }).length >= 1, true);
+  eq(S.filterItems(data.items, {}).length, data.items.length);
+});
+test('helpers', () => {
+  eq(S.monthName('2025-09'), 'Sep 2025'); eq(S.initials('Priya Natarajan'), 'PN');
+  ok(S.teamsLink('a@b.c').includes(encodeURIComponent('a@b.c')));
+});
+
+console.log('\nmodel contract');
+test('the prompt carries the whole catalogue with authors', () => {
+  const { system } = P.askPrompt('q', data);
+  for (const it of data.items) ok(system.includes(`id: ${it.id}`), `missing ${it.id}`);
+  ok(system.includes('priya.natarajan@example.com'));
+  ok(system.includes('Never invent'));
+});
+test('a well-formed reply parses and resolves ids to items', () => {
+  const r = P.parseReply('Sure:\n{"answer":"Yes, see below.","matches":[{"id":"cc-analysis-new-grad-2025","reason":"exact"},{"id":"nope","reason":"x"}]}', data);
+  ok(r.ok, r.error); eq(r.matches.length, 1); eq(r.matches[0].item.author.name, 'Priya Natarajan');
+});
+test('malformed replies fail gracefully', () => {
+  for (const bad of ['no json', '{"answer": 1}', '{"matches": []}', '']) {
+    const r = P.parseReply(bad, data); eq(r.ok, false, bad); ok(r.error);
+  }
+});
+
+console.log('\nsharepoint mapping');
+const driveItem = {
+  id: '01ABC', name: 'Credit card strategy new grad.pptx', webUrl: 'https://contoso.sharepoint.com/sites/x/Deliverables/cc.pptx',
+  createdDateTime: '2025-09-03T10:00:00Z', lastModifiedDateTime: '2025-09-04T10:00:00Z',
+  createdBy: { user: { displayName: 'Priya Natarajan', email: 'priya.natarajan@example.com' } },
+  file: { mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' },
+  listItem: { fields: { Title: 'Credit card strategy for a new graduate', DeliverableType: 'Credit card analysis',
+    Audiences: 'new grad; early career', Topics: ['credit cards', 'rewards'], Client: 'Client 0417', DeliveredOn: '2025-09',
+    Pages: 14, Summary: 'Two-card setup for a first job.', Outline: '- One\n- Two\nThree', Contributors: 'Marcus Bell <marcus.bell@example.com>' } },
+};
+test('a Graph drive item maps to a catalogue item', () => {
+  const it = SP.mapDriveItem(driveItem);
+  eq(it.id, 'credit-card-strategy-new-grad'); eq(it.type, 'Credit card analysis');
+  eq(it.audiences.join('|'), 'new grad|early career'); eq(it.topics.join('|'), 'credit cards|rewards');
+  eq(it.date, '2025-09'); eq(it.format, 'slides'); eq(it.pages, 14);
+  eq(it.file, driveItem.webUrl); eq(it.outline.join('|'), 'One|Two|Three');
+  eq(it.contributors[0].email, 'marcus.bell@example.com');
+});
+test('author falls back to Created By when the author columns are empty', () => {
+  const it = SP.mapDriveItem(driveItem);
+  eq(it.author.name, 'Priya Natarajan'); eq(it.author.email, 'priya.natarajan@example.com');
+  const withCols = SP.mapDriveItem({ ...driveItem, listItem: { fields: { ...driveItem.listItem.fields, AuthorName: 'Someone Else', AuthorEmail: 'else@example.com' } } });
+  eq(withCols.author.name, 'Someone Else');
+});
+test('date falls back to the created date; format comes from the extension', () => {
+  const it = SP.mapDriveItem({ ...driveItem, name: 'x.pdf', listItem: { fields: {} } });
+  eq(it.date, '2025-09'); eq(it.format, 'pdf'); eq(it.title, 'x');
+});
+test('custom column names are honoured', () => {
+  const it = SP.mapDriveItem({ ...driveItem, listItem: { fields: { Kind: 'Insurance review' } } }, { ...SP.DEFAULT_COLUMNS, type: 'Kind' });
+  eq(it.type, 'Insurance review');
+});
+test('mapped items search like demo items', () => {
+  const it = SP.mapDriveItem(driveItem);
+  const d = { taxonomy: data.taxonomy, items: [it] };
+  eq(S.search(d, 'credit card analysis for a new grad').results[0]?.item.id, it.id);
 });
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

@@ -1,159 +1,98 @@
-# knowledge-base — a deliverables library built as an LLM wiki
+# Deliverables library
 
-A demo of a firm's **library of deliverables** — credit card spend analyses, cash flow
-projections, philanthropic giving summaries, estate reviews, performance summaries —
-that you can **search in plain language**, built on
-[Karpathy's LLM wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
-what the firm knows is **compiled once and kept current**, not re-derived from the
-documents on every question.
+**Ask what the firm has already made. Get the decks, and the people who made them.**
 
-```
-raw/          the deliverables   immutable, humans add them
-   │
-   │  ingest / compile           ← the coding agent, driven by CLAUDE.md
-   ▼
-wiki/         compiled pages     clients · services · topics — agent-owned
-   │
-   │  lint                       ← tools/wiki.py, deterministic
-   ▼
-answers       runtime            queries read wiki/, never raw/
-```
+A tagged, indexed library of a firm's deliverables — credit card analyses, cash flow
+projections, giving summaries, estate reviews, primers, memos — with a chat box that
+answers questions like *"have we ever done a credit card analysis for a new grad?"* by
+surfacing the existing deliverables, with the author's name, email and a Teams link so
+you can reach out directly.
 
-**Everything here is synthetic.** Three invented client households, one invented
-company, ten invented deliverables. No real client, firm or figure appears anywhere.
+Works with no model at all: the search understands the library's tags and their
+synonyms. Connect a model for better handling of unusual phrasing. Reads its catalogue
+from a bundled demo file or, in production, straight from a **SharePoint document
+library**, and hosts on **Azure Static Web Apps**.
 
-## Why compile a deliverables library
-
-A folder of PDFs answers "find me the Kessler cash flow". It does not answer "what have
-we told clients about funding a large purchase", or "which of our projections has a
-later deliverable checked", or "do two of our deliverables disagree about the same
-client". Those answers live *across* documents. The compiled layer holds them:
-
-- **Client pages** — everything the firm has told one household, with superseded advice
-  kept and dated rather than deleted.
-- **Service pages** — what a kind of deliverable covers, who has one, what it reliably
-  finds, and how its projections have held up.
-- **Topic pages** — advice that recurs across clients (give appreciated shares, not
-  cash; every card analysis finds unused subscriptions).
-- **Open questions** — what the deliverables raise and do not settle, each with the
-  deliverable that would settle it.
-
-Every figure on every page cites the deliverable it came from, so a natural-language
-answer ends with the documents to open. The demo corpus includes one genuine
-**supersession** (a cash flow projection revised after a house purchase) and one genuine
-**contradiction** (a charity gala table categorised three different ways), because a
-library that never disagrees with itself is not being tested.
+**All demo data is synthetic.** Every client, person, email and figure was invented.
 
 ## Try it
 
 ```bash
-./demo.sh                      # guided walkthrough — no API key, no network
-python3 tools/wiki.py lint     # check the build
-python3 tools/wiki.py status   # what needs recompiling
-python3 tools/test_wiki.py     # 20 tests proving the linter catches violations
-node tools/test_app.mjs        # 33 tests for the app logic
+python3 tools/build_library.py            # validate the records, build the catalogue
+python3 -m http.server -d app 8765        # open http://localhost:8765
 ```
-
-Then open the repo in Claude Code and talk to it:
-
-- `ingest raw/<file>.md` — fold a new deliverable in across client, service and topic pages
-- `which clients have we done giving summaries for?` — answer from the compiled layer
-- `lint the wiki` — mechanical checks, then the judgement pass
-
-Requires Python 3.9+. Standard library only — nothing to install.
-
-## Run it as a web app
-
-```bash
-python3 tools/build_app.py                 # bundle wiki/ + raw/ into app seed data
-python3 -m http.server -d app 8765         # then open http://localhost:8765
-```
-
-It opens in **demo mode**: canned compiler responses, no API key, no network. Every
-feature works. Open Settings to connect a real compiler.
 
 | tab | what it does |
 |---|---|
-| **Browse** | the compiled pages, grouped by client, service and topic, with status badges and backlinks |
-| **Ask** | natural-language search: a compiled answer with a citation behind every figure, plus a deterministic list of the deliverables that match |
-| **Deliverables** | the library itself, grouped by client, each showing which pages cite it |
-| **Add** | paste a deliverable; the compiler proposes edits across pages, shows a diff, and **lints the proposal before you can apply it** |
-| **Lint** | the same invariants as `tools/wiki.py`, run client-side |
+| **Ask** | plain-language question → short answer, the matching deliverables as cards, the people to contact |
+| **Browse** | every deliverable, filterable by type, audience, year, or words |
+| **People** | who has made what, with email and Teams links |
 
-The demo deliverable on the Add tab is a half-year card analysis whose numbers
-contradict an assumption the client's cash flow projection relies on. The pass
-condition is that the compiler marks the client page contested and names both
-deliverables, rather than quietly updating the number.
+Checks: `python3 tools/test_library.py` (the validator), `node tools/test_app.mjs`
+(search, model contract, SharePoint mapping). Python 3.9+ and Node 20; nothing to install.
 
-Anything you compile in the browser is layered over the shipped library in
-`localStorage` and can be exported as `.md` files to commit back. A static page cannot
-write to your git history, so the loop ends with an export rather than pretending
-otherwise.
+## How it works
 
-### The API key question
+```
+library/*.md  ──build──▶  app/data/library.json  ──▶  search.js (tags + synonyms)  ──▶  answer + cards + people
+SharePoint    ──Graph──▶  same shape, at runtime  ──▶  provider.js (optional model)  ──┘
+```
 
-GitHub Pages is **static hosting — no server, no secrets**. So a genuinely working
-compiler there has two honest options, and the app supports both:
+- **Records.** One markdown file per deliverable in `library/` with frontmatter: type,
+  audiences, topics, client, date, file, author with email, contributors, plus a summary
+  and an outline. `tools/build_library.py` refuses a record with an unknown tag, a
+  missing email, or a thin summary.
+- **Taxonomy.** `library/taxonomy.json` holds the types, audience tags and topic tags,
+  each with aliases. "New grad", "recent graduate", "first job" and "entry level" all
+  resolve to the same tag, so the question and the record meet even when the words
+  differ.
+- **Search.** `app/lib/search.js` parses the question into type, audience and topic,
+  scores every record, and drafts the answer. This is what demo mode says.
+- **Model.** With a key or a proxy, `app/lib/provider.js` sends the whole catalogue
+  (it is small) and the question, and asks for JSON naming the matching deliverables.
+  A reply that cannot be parsed falls back to the search, so the page never goes blank.
+- **People.** Authors and contributors of the top results, ranked by involvement, with
+  `mailto:` and Teams deep links.
 
-- **Direct** — the visitor supplies their own key; the browser calls the Claude API
-  itself. Suitable for a personal tool only. **Never deploy a build with your own key
-  in it.**
-- **Proxy** — point the app at an endpoint you control that holds the key server-side.
-  [`proxy/worker.js`](proxy/worker.js) is a starting point. Note that as written it
-  gates on the `Origin` header only, which a non-browser caller can omit; put real
-  authentication in front of it before exposing it. For a Microsoft-hosted version of
-  this whole system, see [`docs/azure-microsoft-plan.md`](docs/azure-microsoft-plan.md).
+## Connect it to SharePoint
 
-Model: `claude-opus-5` with adaptive thinking, streamed.
+Put the deliverables in a document library with a handful of metadata columns
+(`python3 tools/sharepoint_columns.py` prints them), register a single-page app in Entra
+with delegated `Sites.Read.All`, and point `app/config.js` at the site. Each visitor
+signs in with their own account, so they only see what SharePoint already lets them
+open. Step by step: [`docs/sharepoint-setup.md`](docs/sharepoint-setup.md).
 
-## Publish it
+The connector was written without access to a tenant; its mapping is unit-tested, the
+live call is not. Budget an hour for the first connection.
 
-Enable Pages under **Settings → Pages → Source: GitHub Actions**, then merge to
-`main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes the app at
-`/` and a no-JavaScript static rendering at `/read/`. The deploy is **lint-gated**: a
-library that fails its own invariants does not get published.
+## Host it on Azure
+
+One Azure Static Web App hosts the page, gates it behind Entra sign-in, and runs the
+`api/ask` function that holds the model key. The GitHub Actions workflow in
+`.github/workflows/azure-static-web-apps.yml` validates, tests and deploys on push.
+Step by step: [`docs/deploy-azure.md`](docs/deploy-azure.md).
+
+`.github/workflows/pages.yml` publishes the demo (no SharePoint, no model) to GitHub
+Pages, and `proxy/worker.js` is a Cloudflare Worker for hosting the key outside Azure.
 
 ## What's here
 
 | path | what it is |
 |---|---|
-| `CLAUDE.md` | **the schema** — the contract the agent compiles against |
-| `raw/` | 10 synthetic deliverables for three client households, plus one internal standard |
-| `wiki/` | 17 compiled pages: 3 clients, 5 services, 5 topics, open questions, overview, index, log |
-| `wiki/synthesis.md` | start here — what the library currently knows |
-| `wiki/log.md` | append-only record of every ingest and query |
-| `tools/wiki.py` | lint · status · index · graph · stats · new |
-| `tools/test_wiki.py` | negative tests for the linter |
-| `app/` | the web app — Browse, Ask, Deliverables, Add, Lint |
-| `tools/build_app.py` | bundles `wiki/` + `raw/` into the app's seed data |
-| `tools/test_app.mjs` | tests for the app logic, its linter, the demo ingest and search |
-| `tools/build_site.py` | renders `wiki/` to the static no-JS archive |
-| `proxy/worker.js` | optional Cloudflare Worker so the key lives server-side |
-| `docs/azure-microsoft-plan.md` | how to build this on Azure / Microsoft 365 instead of as a static web app |
-| `examples/llm-wiki-pattern/` | the previous demo corpus: the LLM wiki pattern compiled from its own literature |
-| `.claude/skills/` | the operations: ingest, query, lint |
+| `library/` | 16 synthetic deliverable records and the taxonomy |
+| `app/` | the app: `index.html`, `app.css`, `app.js`, `config.js`, `lib/`, `data/` |
+| `api/` | Azure Functions backend (`/api/ask`) |
+| `tools/build_library.py` | validate and bundle the records |
+| `tools/sharepoint_columns.py` | the SharePoint column spec, generated from the taxonomy |
+| `tools/test_library.py`, `tools/test_app.mjs` | tests |
+| `docs/` | SharePoint setup, Azure hosting |
+| `proxy/worker.js` | optional Cloudflare Worker proxy |
+| `archive/llm-wiki/` | the earlier prototype this grew out of, kept for reference |
 
-## What makes this more than a folder of documents
+## Adding a deliverable to the demo
 
-`tools/wiki.py lint` enforces:
-
-- **Citation integrity** — every `[^source-id]` resolves to a real deliverable in `raw/`
-  *and* appears in the page's frontmatter. You cannot invent a citation.
-- **Link integrity** — every `[[wikilink]]` resolves; orphan pages are reported.
-- **Contradiction bookkeeping** — a page marked `status: contested` **must** carry a
-  `## Contradictions` section naming which deliverable claims what.
-- **Staleness as a dependency check** — a page whose cited deliverable was added after
-  the page was last compiled is stale, exactly as an object file is stale when its
-  source is newer.
-- **Uningested deliverables** — a file in `raw/` that no page cites is a build error.
-
-## What it does not do
-
-- **The linter checks consistency, not truth.** Whether a figure was carried over from
-  the deliverable correctly is checked by nobody but you.
-- **No epistemic filter, no decay.** A page compiled once and never revisited looks
-  identical to one that survived four deliverables. See
-  [`wiki/questions/open-questions.md`](wiki/questions/open-questions.md).
-- **It is a demo corpus.** Ten deliverables is enough to show supersession,
-  contradiction and cross-client synthesis; it is not enough to show how the pattern
-  scales. Swap in your own deliverables — the schema and tooling are corpus-agnostic.
+Copy any file in `library/`, keep `id` equal to the file name, use tags from the
+taxonomy, give the author an email, write a two-to-four sentence summary of what it
+found or recommended, list the slide titles under `## Outline`, then run
+`python3 tools/build_library.py`. In production, filing the file in SharePoint with its
+columns filled in is the whole step.

@@ -1,0 +1,12 @@
+{
+  "name": "deliverables-library-api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Azure Functions backend for the deliverables library: holds the model key server-side.",
+  "main": "src/functions/*.js",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@azure/functions": "^4.5.0"
+  }
+}
