@@ -48,7 +48,7 @@ test('every page renders with no unresolved wikilinks', () => {
 
 console.log('\nfrontmatter');
 test('parse → serialize → parse round-trips', () => {
-  const page = { meta: { title: 'T', type: 'concept', status: 'contested',
+  const page = { meta: { title: 'T', type: 'topic', status: 'contested',
     updated: '2026-09-01', sources: ['a', 'b'] }, body: '# T\n\nbody\n' };
   const { meta } = W.parseFrontmatter(W.serialize(page));
   eq(meta.title, 'T'); eq(meta.status, 'contested');
@@ -70,11 +70,11 @@ console.log('\nlint catches violations');
 const SRC = [{ id: 'src-a', file: 'raw/a.md', added: '2026-01-01' }];
 const base = () => [{
   slug: 'a', file: 'wiki/a.md',
-  meta: { title: 'A', type: 'concept', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
+  meta: { title: 'A', type: 'topic', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
   body: 'Claim [^src-a]. See [[b]] [[c]] [[d]].\n\n[^src-a]: raw/a.md\n',
 }, ...['b', 'c', 'd'].map(s => ({
   slug: s, file: `wiki/${s}.md`,
-  meta: { title: s, type: 'concept', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
+  meta: { title: s, type: 'topic', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
   body: `Claim [^src-a]. See [[a]] [[b]] [[c]] [[d]].\n\n[^src-a]: raw/a.md\n`,
 }))];
 const flags = (pages, sources, needle, level = 'errors') => {
@@ -119,22 +119,23 @@ test('bad status value', () => {
 test('superseded needs a forward link', () => {
   const p = base();
   p.push({ slug: 'z', file: 'wiki/z.md',
-    meta: { title: 'Z', type: 'concept', status: 'superseded', updated: '2026-02-01', sources: [] },
+    meta: { title: 'Z', type: 'topic', status: 'superseded', updated: '2026-02-01', sources: [] },
     body: 'nothing\n' });
   flags(p, null, 'must link forward');
 });
 test('orphan page warns', () => {
   const p = base();
   p.push({ slug: 'lonely', file: 'wiki/lonely.md',
-    meta: { title: 'L', type: 'concept', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
+    meta: { title: 'L', type: 'topic', status: 'established', updated: '2026-02-01', sources: ['src-a'] },
     body: 'Claim [^src-a]. [[a]] [[b]] [[c]]\n\n[^src-a]: raw/a.md\n' });
   flags(p, null, 'orphan', 'warnings');
 });
 
 console.log('\ningest');
+const demoReply = () => D.demoIngestReply(D.DEMO_SOURCE.added, clonePages());
 test('the demo reply parses into edits', () => {
-  const r = P.parseEdits(D.DEMO_INGEST_REPLY);
-  ok(r.ok, r.error); eq(r.data.edits.length, 3);
+  const r = P.parseEdits(demoReply());
+  ok(r.ok, r.error); eq(r.data.edits.length, 4);
   ok(r.data.log, 'no log line'); ok(r.data.contradictions.length >= 1);
 });
 test('malformed replies fail gracefully, never throw', () => {
@@ -144,10 +145,16 @@ test('malformed replies fail gracefully, never throw', () => {
     ok(typeof r.error === 'string' && r.error.length > 0);
   }
 });
+test('the demo deliverable is dated today, so the proposal is never stale', () => {
+  eq(D.DEMO_SOURCE.added, new Date().toISOString().slice(0, 10));
+  const { data: d } = P.parseEdits(demoReply());
+  for (const e of d.edits) eq(e.updated, D.DEMO_SOURCE.added, `${e.slug} updated date`);
+});
 test('applying the demo ingest leaves the wiki lint-clean', () => {
-  const { data: d } = P.parseEdits(D.DEMO_INGEST_REPLY);
+  const { data: d } = P.parseEdits(demoReply());
   const pages = clonePages();
-  const sources = [...data.sources, { ...D.DEMO_SOURCE, file: 'raw/2026-09-01-rag-eval-2026.md' }];
+  const sources = [...data.sources,
+    { ...D.DEMO_SOURCE, file: `raw/${D.DEMO_SOURCE.added}-${D.DEMO_SOURCE.id}.md` }];
   for (const e of d.edits) {
     const pg = { slug: e.slug, file: `wiki/${e.slug}.md`, body: e.body,
       meta: { title: e.title, type: e.type, status: e.status, updated: e.updated, sources: e.sources } };
@@ -158,19 +165,29 @@ test('applying the demo ingest leaves the wiki lint-clean', () => {
   eq(r.errors.length, 0, `errors: ${r.errors.join('; ')}`);
   eq(r.warnings.length, 0, `warnings: ${r.warnings.join('; ')}`);
 });
-test('the demo ingest marks contradicted pages contested', () => {
-  const { data: d } = P.parseEdits(D.DEMO_INGEST_REPLY);
+test('the demo ingest marks the contradicted client page contested', () => {
+  const { data: d } = P.parseEdits(demoReply());
   const contested = d.edits.filter(e => e.status === 'contested').map(e => e.slug);
-  ok(contested.includes('comparisons/wiki-vs-rag'), 'wiki-vs-rag not contested');
-  ok(contested.includes('concepts/compilation-over-retrieval'), 'core claim not contested');
+  ok(contested.includes('clients/abernathy-ruiz'), 'client page not contested');
+  const before = data.pages.find(p => p.slug === 'clients/abernathy-ruiz');
+  eq(before.meta.status, 'established', 'seed client page should start established');
   for (const e of d.edits) {
     if (e.status === 'contested') ok(/^##+\s*Contradictions/m.test(e.body),
       `${e.slug} contested with no Contradictions section`);
   }
 });
 test('the demo ingest touches several pages, not one', () => {
-  const { data: d } = P.parseEdits(D.DEMO_INGEST_REPLY);
+  const { data: d } = P.parseEdits(demoReply());
   ok(d.edits.length >= 3, `only ${d.edits.length} edits — that is filing, not compiling`);
+});
+test('every demo edit is a real change to an existing page', () => {
+  const { data: d } = P.parseEdits(demoReply());
+  for (const e of d.edits) {
+    const before = data.pages.find(p => p.slug === e.slug);
+    ok(before, `${e.slug} does not exist in the seed`);
+    ok(before.body !== e.body, `${e.slug} body unchanged — an anchor in demo.js no longer matches`);
+    ok(e.body.includes(`[^${D.DEMO_SOURCE.id}]`), `${e.slug} never cites the new deliverable`);
+  }
 });
 
 console.log('\nprompts');
@@ -178,24 +195,51 @@ test('query prompt carries the wiki and forbids outside knowledge', () => {
   const { system } = P.queryPrompt('q', data.pages, data.sources);
   ok(system.includes('COMPILED WIKI'));
   ok(system.includes('not from your own background knowledge'));
-  ok(system.includes('karpathy-llm-wiki-gist'), 'source ids not listed');
+  ok(system.includes('kessler-cash-flow-2026-05'), 'deliverable ids not listed');
+  ok(system.includes('Kessler family'), 'client metadata not carried into the prompt');
 });
 test('ingest prompt states the contradiction rule', () => {
-  const { system } = P.ingestPrompt('text', { id: 'x', title: 'T', added: '2026-09-01', capture: 'summary' },
+  const { system } = P.ingestPrompt('text', { id: 'x', title: 'T', added: '2026-09-01', capture: 'verbatim' },
     data.pages, data.sources);
   ok(system.toLowerCase().includes('contradict'));
   ok(system.includes('"edits"'), 'no json contract');
 });
 test('demo router returns an honest miss for uncovered questions', () => {
   ok(D.demoAnswer('best sourdough recipe').includes('cannot answer'));
-  ok(!D.demoAnswer('should pages decay?').includes('cannot answer'));
+  ok(!D.demoAnswer('which clients have giving summaries?').includes('cannot answer'));
+});
+test('every canned answer cites only real deliverables and real pages', () => {
+  const ids = new Set(data.sources.map(s => s.id));
+  const slugs = new Set(data.pages.map(p => p.slug));
+  for (const q of ['philanthropic summaries', 'lake house', 'dining spend', 'concentrated stock',
+                   'which clients do we have']) {
+    const a = D.demoAnswer(q);
+    for (const m of a.matchAll(/\[\^([A-Za-z0-9._-]+)\]/g))
+      ok(m[1] === 'synthesis' || ids.has(m[1]), `"${q}" cites unknown ${m[1]}`);
+    const used = (a.match(/PAGES USED:\s*(.+)$/s) || [])[1] || '';
+    for (const s of used.split(',').map(x => x.trim()).filter(x => x && x !== 'none'))
+      ok(slugs.has(s), `"${q}" lists unknown page ${s}`);
+  }
 });
 
 console.log('\nsearch');
 test('search ranks the right page first', () => {
-  eq(W.search(data.pages, 'decay')[0].page.slug, 'concepts/knowledge-lifecycle');
+  eq(W.search(data.pages, 'subscriptions')[0].page.slug, 'topics/unused-subscriptions');
 });
 test('empty query returns nothing', () => eq(W.search(data.pages, '  ').length, 0));
+test('deliverable search finds documents by client and type', () => {
+  const hits = W.searchSources(data.sources, 'Kessler cash flow');
+  ok(hits.length >= 2, 'expected both Kessler projections');
+  ok(hits.slice(0, 2).every(h => h.source.id.startsWith('kessler-cash-flow')),
+    `top hits: ${hits.slice(0, 2).map(h => h.source.id).join(', ')}`);
+});
+test('deliverable search ignores stop words and matches plurals', () => {
+  const hits = W.searchSources(data.sources, 'which clients have philanthropic summaries?');
+  ok(hits.length >= 2, 'expected the two giving summaries');
+  ok(hits.slice(0, 2).every(h => h.source.deliverable === 'Philanthropic giving summary'),
+    `top hits: ${hits.slice(0, 2).map(h => h.source.id).join(', ')}`);
+  eq(W.searchSources(data.sources, 'which have the').length, 0);
+});
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

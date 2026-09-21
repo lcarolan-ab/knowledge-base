@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LLM wiki</title>
-<meta name="description" content="A working LLM wiki: browse, query, and compile new sources into a knowledge base that keeps its own invariants.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<title>Deliverables library</title>
+<meta name="description" content="A library of a firm's deliverables, compiled into a knowledge base you can search in plain language. Demo with synthetic clients.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 
 <header>
   <div class="bar">
-    <a class="brand" href="#/">📚 <b>LLM wiki</b></a>
+    <a class="brand" href="#/">🗂️ <b>Deliverables library</b></a>
     <nav class="tabs">
-      <a href="#/" data-tab="read">Read</a>
+      <a href="#/" data-tab="read">Browse</a>
       <a href="#/ask" data-tab="ask">Ask</a>
-      <a href="#/ingest" data-tab="ingest">Ingest</a>
+      <a href="#/sources" data-tab="sources">Deliverables</a>
+      <a href="#/ingest" data-tab="ingest">Add</a>
       <a href="#/lint" data-tab="lint">Lint</a>
-      <a href="#/sources" data-tab="sources">Sources</a>
     </nav>
     <div class="bar-right">
       <span id="mode-chip" class="chip" title="Which compiler backend is active"></span>
@@ -33,16 +33,16 @@
   </div>
 </header>
 
-<main id="view"><div class="loading">Loading wiki…</div></main>
+<main id="view"><div class="loading">Loading the library…</div></main>
 
 <dialog id="settings">
   <form method="dialog" class="sheet">
     <h2>Settings</h2>
 
     <p class="muted">
-      This page is static — there is no server behind it. To actually run the
-      compiler you either bring your own API key, or point it at a backend you
-      control.
+      This page is static — there is no server behind it. Demo mode answers from
+      canned responses. To run the compiler for real you either bring your own API
+      key, or point it at a backend you control.
     </p>
 
     <label class="field">
@@ -87,9 +87,10 @@
 
 <footer id="foot">
   <div class="bar" style="display:block">
-    Compiled from <code>raw/</code> by an LLM; consistency checked by the same rules as
-    <code>tools/wiki.py lint</code>. The linter checks that links resolve and citations
-    exist — <b>not</b> that any page is true.
+    Compiled from the deliverables in <code>raw/</code> by an LLM; consistency checked by
+    the same rules as <code>tools/wiki.py lint</code>. The linter checks that links resolve
+    and citations point at real deliverables — <b>not</b> that any page is true. All
+    clients and figures are synthetic.
     <span id="foot-links"></span>
   </div>
 </footer>

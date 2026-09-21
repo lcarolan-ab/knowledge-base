@@ -24,8 +24,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wiki  # noqa: E402
 
-PLURAL = {"concept": "concepts", "entity": "entities", "comparison": "comparisons",
-          "question": "questions", "overview": "overviews"}
+PLURAL = {"overview": "overviews", "client": "clients", "service": "services",
+          "topic": "topics", "question": "questions"}
 
 STATUS_BLURB = {
     "established": "multiple sources agree, or one authoritative source and no dissent",
@@ -335,7 +335,7 @@ def nav_html(pages: dict, here: str) -> str:
              f'{" class=here" if here == "log" else ""}>Log</a>'
              f'<a href="{rel(here, "graph")}"'
              f'{" class=here" if here == "graph" else ""}>Link graph</a>']
-    for ptype in ("concept", "entity", "comparison", "question", "overview"):
+    for ptype in wiki.TYPE_ORDER:
         items = [x for x in groups.get(ptype, []) if x[0] != "synthesis"]
         if not items:
             continue
@@ -355,11 +355,11 @@ def shell(title: str, slug: str, pages: dict, body: str, repo_url: str,
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{html.escape(title)} · LLM wiki</title>
+<title>{html.escape(title)} · Deliverables library</title>
 <style>{CSS}</style></head><body>
 <header><div class="wrap">
-<a class="home" href="{up}index.html">knowledge-base</a>
-<div class="tag">an LLM wiki — knowledge compiled once, kept current</div>
+<a class="home" href="{up}index.html">Deliverables library</a>
+<div class="tag">a deliverables library — compiled once, kept current</div>
 </div></header>
 <div class="wrap">{nav_html(pages, slug)}<main>{body}</main></div>
 <footer><div class="wrap" style="display:block">
@@ -433,13 +433,12 @@ def home_html(pages: dict, sources: dict, repo_url: str) -> str:
     links = sum(len(p.links) for p in pages.values())
     cites = sum(len(p.cites) for p in pages.values())
 
-    body = ["<h1>knowledge-base</h1>",
-            "<p>A working prototype of the <strong>LLM wiki</strong> pattern: knowledge "
-            "compiled once from raw sources and kept current, rather than re-derived "
-            "from documents on every question. Its subject is the pattern itself — "
-            "compiled from the original gist and three responses, two of which disagree "
-            "with it and with each other.</p>",
-            "<pre>raw/    source files, immutable      humans curate\n"
+    body = ["<h1>Deliverables library</h1>",
+            "<p>A library of the firm's deliverables — credit card analyses, cash flow "
+            "projections, philanthropic summaries and more — <strong>compiled once</strong> "
+            "into client, service and topic pages and kept current, rather than re-read "
+            "from the documents on every question. All clients and figures are synthetic.</p>",
+            "<pre>raw/    the deliverables, immutable   humans curate\n"
             "wiki/   build output, interlinked     the agent owns\n"
             "lint    the test suite               tools/wiki.py, deterministic</pre>",
             f"<div class='stats'>"
@@ -456,7 +455,7 @@ def home_html(pages: dict, sources: dict, repo_url: str) -> str:
             "<span class='badge b-provisional'>provisional</span>. A page marked "
             "contested <em>must</em> name who claims what, or the build fails.</p>"]
 
-    for ptype in ("concept", "entity", "comparison", "question", "overview"):
+    for ptype in wiki.TYPE_ORDER:
         items = groups.get(ptype)
         if not items:
             continue

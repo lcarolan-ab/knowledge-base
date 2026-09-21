@@ -2,65 +2,57 @@
 title: Open questions
 type: question
 status: provisional
-updated: 2026-08-25
+updated: 2026-09-21
 sources:
-  - four-structural-gaps
-  - llm-wiki-v2
-  - jibrain-response
-  - karpathy-llm-wiki-gist
+  - abernathy-ruiz-cash-flow-2026
+  - firm-spend-categorisation-standard-v3
+  - abernathy-ruiz-card-analysis-2025
+  - kessler-card-analysis-2025
+  - okonkwo-estate-liquidity-2026
 ---
 
 # Open questions
 
-Questions the sources raise and do not settle. Each names what evidence would move it,
-because a question with no such answer is a mood rather than a question [^synthesis].
+Things the deliverables raise and the library cannot yet answer. Each names the
+deliverable that would settle it [^synthesis].
 
-## 1. Can a compiler filter its own inputs?
+## 1. Does the flat-spend assumption hold?
 
-Nothing in the pattern asks whether a claim is falsifiable, so the wiki accumulates
-"confident nonsense at the same rate" as genuine knowledge [^four-structural-gaps]. The
-`status` field is a weak answer, since the model applying the label is the model that
-wrote the page [^synthesis]. *Resolvable by:* seeding a wiki with known-false sources
-and measuring whether they are marked contested or absorbed silently. See
-[[concepts/confidence-scoring]].
+The Abernathy-Ruiz projection carries 2025 card spend forward unchanged and calls that
+its most fragile input, noting that 9% annual growth would cut savings capacity by
+about $17,000 a year, compounding [^abernathy-ruiz-cash-flow-2026]. *Settled by:* the
+2026 card analysis for the household. See [[services/cash-flow-projection]].
 
-## 2. Scrutiny or time — which lifecycle axis is right?
+## 2. Do recommended cancellations happen?
 
-The two proposed lifecycles measure different things and disagree about which claims to
-promote: emergence → validation → crystallisation → dormancy → invalidation, ordered by
-stress-testing [^four-structural-gaps], versus Ebbinghaus decay resetting on
-reinforcement, ordered by recency and repetition [^llm-wiki-v2]. *Resolvable by:*
-running both over the same corpus and checking which one demotes claims that later
-turned out wrong. See [[concepts/knowledge-lifecycle]].
+Two analyses recommend cancelling 13 subscriptions worth $3,200 a year between them
+[^abernathy-ruiz-card-analysis-2025] [^kessler-card-analysis-2025]. *Settled by:* the
+next card analysis for either household. See [[topics/unused-subscriptions]].
 
-## 3. What is the real integration cost curve?
+## 3. How should 2025 and 2026 card analyses be compared?
 
-Ingest is specified as updating 10–15 pages per source [^karpathy-llm-wiki-gist]. If
-that number is roughly constant the pattern scales; if it grows with wiki size, ingest
-eventually costs more than the wiki returns [^synthesis]. No source reports measurements.
-*Resolvable by:* instrumenting pages-touched per ingest against total page count. See
-[[concepts/compilation-over-retrieval]].
+Version 3 of the standard bars comparing charitable or dining totals across versions
+without adjustment but does not say what the adjustment is
+[^firm-spend-categorisation-standard-v3]. *Settled by:* an addendum to the standard, or
+a restated 2025 analysis. See [[topics/spend-categorisation]].
 
-## 4. Does anyone read the diffs?
+## 4. Is the Okonkwo plan being executed?
 
-Automating the bookkeeping moves review onto the human: 10–15 changed pages per source
-is a real reading burden, and skipping it yields an artifact nobody has checked
-[^synthesis]. The proposed remedy of event-driven hooks [^llm-wiki-v2] draws the
-objection that auto-ingest assumes reliable LLMs and wants manual gating on writes
-[^llm-wiki-v2]. *Resolvable by:* observing whether long-running wikis show evidence of
-unreviewed drift. See [[concepts/the-maintenance-burden]].
+The March 2026 review set four actions with dates: file the 10b5-1 plan, fund the GRAT
+in Q2, establish the ILIT, and coordinate giving in shares
+[^okonkwo-estate-liquidity-2026]. Only the last is confirmed by a later deliverable
+[^synthesis]. *Settled by:* a Q2 or Q3 2026 review. See [[clients/okonkwo]].
 
-## 5. Why did the mature system still lack maintenance?
+## 5. Is 3.5% the right ceiling for every retired household?
 
-A deployment with entity resolution, hybrid search and seven-tier quality gating names
-contradiction detection and provenance as its biggest gap [^jibrain-response]. Either
-maintenance is genuinely harder than retrieval, or it is merely less legible as
-engineering work and so gets built last [^synthesis]. These have different implications
-for anyone starting now. See [[entities/jibrain]] and
-[[concepts/contradiction-detection]].
+The Kessler projections apply a 3.5% net-draw ceiling without stating where it comes
+from, and no other retired household is in the library to compare
+[^synthesis]. *Settled by:* a methodology memo for cash flow projections, like the one
+that exists for spend categorisation [^firm-spend-categorisation-standard-v3].
 
-[^four-structural-gaps]: raw/2026-05-four-structural-gaps.md
-[^llm-wiki-v2]: raw/2026-06-llm-wiki-v2-agentmemory.md
-[^jibrain-response]: raw/2026-05-jibrain-what-we-do-better.md
-[^karpathy-llm-wiki-gist]: raw/2026-04-04-karpathy-llm-wiki-gist.md
+[^abernathy-ruiz-cash-flow-2026]: raw/2026-03-18-abernathy-ruiz-cash-flow-2026.md
+[^firm-spend-categorisation-standard-v3]: raw/2026-07-30-firm-spend-categorisation-standard-v3.md
+[^abernathy-ruiz-card-analysis-2025]: raw/2026-02-10-abernathy-ruiz-card-analysis-2025.md
+[^kessler-card-analysis-2025]: raw/2026-01-22-kessler-card-analysis-2025.md
+[^okonkwo-estate-liquidity-2026]: raw/2026-03-27-okonkwo-estate-liquidity-2026.md
 [^synthesis]: compiled in this repository

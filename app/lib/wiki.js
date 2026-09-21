@@ -5,7 +5,8 @@
 // during ingest, and those pages must be rendered and linted before they exist
 // on disk.
 
-export const PAGE_TYPES = ['concept', 'entity', 'comparison', 'question', 'overview'];
+export const PAGE_TYPES = ['overview', 'client', 'service', 'topic', 'question'];
+export const TYPE_LABEL = { overview: 'overview', client: 'clients', service: 'services', topic: 'topics', question: 'questions' };
 export const STATUSES = ['established', 'contested', 'provisional', 'superseded'];
 export const REQUIRED = ['title', 'type', 'status', 'updated', 'sources'];
 const INFRA = new Set(['index', 'log', 'synthesis']);
@@ -351,6 +352,35 @@ export function search(pages, q) {
         : pg.body.slice(0, 180).replace(/\s+/g, ' ');
       hits.push({ page: pg, score, snippet });
     }
+  }
+  return hits.sort((a, b) => b.score - a.score);
+}
+
+// Keyword search over the deliverables themselves (title, client, type, period,
+// body). Deterministic, no model: the "which documents match" half of a
+// natural-language search, shown alongside the compiled answer.
+const STOP = new Set(('a an and are as at be by did do does for from has have how in is it of ' +
+  'on or our that the their there these this to us was we were what when which who why ' +
+  'with about any all tell me show list find give').split(' '));
+
+export function searchSources(sources, q) {
+  const terms = q.toLowerCase().replace(/[^\p{L}\p{N}\s$-]/gu, ' ').split(/\s+/)
+    .filter(t => t && !STOP.has(t))
+    .map(t => (t.length > 4 && t.endsWith('s')) ? t.slice(0, -1) : t);
+  if (!terms.length) return [];
+  const hits = [];
+  for (const s of sources) {
+    const head = [s.title, s.client, s.deliverable, s.period, s.id].join(' ').toLowerCase();
+    const body = (s.body || '').toLowerCase();
+    let score = 0, matched = 0;
+    for (const t of terms) {
+      let hit = 0;
+      if (head.includes(t)) { score += 10; hit = 1; }
+      const n = Math.min(body.split(t).length - 1, 8);
+      if (n) { score += n; hit = 1; }
+      matched += hit;
+    }
+    if (score > 0) hits.push({ source: s, score: score * matched, matched });
   }
   return hits.sort((a, b) => b.score - a.score);
 }

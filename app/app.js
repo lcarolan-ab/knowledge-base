@@ -1,6 +1,7 @@
-// app.js — a working LLM wiki in the browser.
+// app.js — a deliverables library, built as an LLM wiki, in the browser.
 //
-// Read / Ask / Ingest / Lint over a compiled wiki. The seed corpus ships as
+// Browse / Ask / Add / Lint over a compiled wiki of the firm's deliverables. The
+// seed corpus ships as
 // data/wiki.json (built by tools/build_app.py); anything you compile in the
 // browser is layered on top in localStorage and exported as .md files you can
 // commit back to the repo. A static page cannot write to your git history, so
@@ -8,7 +9,7 @@
 
 import * as W from './lib/wiki.js';
 import * as P from './lib/provider.js';
-import { DEMO_SOURCE, DEMO_INGEST_REPLY, demoAnswer } from './lib/demo.js';
+import { DEMO_SOURCE, demoIngestReply, demoAnswer } from './lib/demo.js';
 
 const $ = s => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => {
@@ -109,8 +110,10 @@ function exportChanges() {
     files.push([`${pg.slug.replace(/\//g, '__')}.md`, W.serialize(pg)]);
   for (const s of Object.values(State.overlay.sources)) {
     const fm = `---\nsource_id: ${s.id}\ntitle: "${s.title}"\nauthor: ${s.author || ''}\n` +
-      `url: ${s.url || ''}\npublished: ${s.published || ''}\nadded: ${s.added}\n` +
-      `kind: ${s.kind || 'note'}\ncapture: ${s.capture || 'summary'}\n---\n\n${s.body}\n`;
+      `client: ${s.client || ''}\ndeliverable: ${s.deliverable || ''}\n` +
+      `period: ${s.period || ''}\nurl: ${s.url || ''}\npublished: ${s.published || ''}\n` +
+      `added: ${s.added}\nkind: ${s.kind || 'deliverable'}\n` +
+      `capture: ${s.capture || 'verbatim'}\n---\n\n${s.body}\n`;
     files.push([`RAW__${s.added}-${s.id}.md`, fm]);
   }
   if (State.overlay.log.length) {
@@ -138,7 +141,7 @@ function nav(here) {
 
   const side = el('nav', { class: 'side' },
     el('input', {
-      class: 'searchbox', type: 'text', placeholder: 'Search the wiki…',
+      class: 'searchbox', type: 'text', placeholder: 'Search pages and deliverables…',
       value: Router.q || '',
       oninput: e => {
         const v = e.target.value;
@@ -150,14 +153,14 @@ function nav(here) {
       },
     }));
 
-  for (const t of ['overview', 'concept', 'entity', 'comparison', 'question']) {
+  for (const t of W.PAGE_TYPES) {
     const items = (groups[t] || []).filter(p => p.slug !== 'synthesis');
     if (t === 'overview' && groups.overview?.some(p => p.slug === 'synthesis')) {
       side.append(el('h4', {}, 'start'),
         link(State.pageMap().get('synthesis')));
     }
     if (!items.length) continue;
-    side.append(el('h4', {}, t + (t === 'entity' ? 'ies' : 's')));
+    side.append(el('h4', {}, W.TYPE_LABEL[t] || t));
     items.forEach(p => side.append(link(p)));
   }
   return side;
@@ -184,10 +187,11 @@ function pageBody(pg) {
         html: id === 'synthesis'
           ? `<code>synthesis</code> — the compiler's own reasoning, not a source`
           : `<code>${esc(id)}</code> — <a href="#/source/${encodeURIComponent(id)}">` +
-            `${esc(src ? src.title : target)}</a>`,
+            `${esc(src ? src.title : target)}</a>` +
+            (src && src.client ? ` <span class="muted">· ${esc(src.client)}</span>` : ''),
       }));
     }
-    wrap.append(el('div', { class: 'notes' }, el('h2', {}, 'Sources cited'), ul));
+    wrap.append(el('div', { class: 'notes' }, el('h2', {}, 'Deliverables cited'), ul));
   }
 
   const { inbound } = W.lint(State.pages, State.sources);
@@ -211,30 +215,36 @@ VIEWS.home = () => {
   const cites = State.pages.reduce((a, p) => a + W.citesOf(p.body).length, 0);
 
   main.append(
-    el('h1', {}, 'A working LLM wiki'),
+    el('h1', {}, 'The deliverables library'),
     el('p', {
-      html: 'Knowledge <b>compiled once</b> from raw sources into interlinked pages and ' +
-        'kept current — not re-derived from documents on every question. Ask it something, ' +
-        'or compile a new source into it and watch which pages change.',
+      html: 'Everything the firm has produced for its clients — credit card analyses, ' +
+        'cash flow projections, philanthropic summaries, reviews — <b>compiled once</b> ' +
+        'into client, service and topic pages and kept current, rather than re-read from ' +
+        'the documents on every question. Ask it something in plain language, or add a ' +
+        'new deliverable and watch which pages change. ' +
+        '<span class="muted">All clients and figures are synthetic.</span>',
     }),
     el('div', { class: 'stats' },
       el('div', { class: 'stat' }, el('b', {}, String(State.pages.length)), el('span', {}, 'pages')),
-      el('div', { class: 'stat' }, el('b', {}, String(State.sources.length)), el('span', {}, 'sources')),
+      el('div', { class: 'stat' }, el('b', {}, String(State.sources.length)), el('span', {}, 'deliverables')),
       el('div', { class: 'stat' }, el('b', {}, String(links)), el('span', {}, 'links')),
       el('div', { class: 'stat' }, el('b', {}, String(cites)), el('span', {}, 'citations')),
       el('div', { class: 'stat' }, el('b', {}, words.toLocaleString()), el('span', {}, 'words'))),
     el('div', { class: 'row' },
-      el('a', { class: 'btn', href: '#/ask' }, 'Ask the wiki'),
-      el('a', { class: 'btn ghost', href: '#/ingest' }, 'Compile a new source'),
-      el('a', { class: 'btn ghost', href: '#/page/synthesis' }, 'Read the synthesis')));
+      el('a', { class: 'btn', href: '#/ask' }, 'Ask the library'),
+      el('a', { class: 'btn ghost', href: '#/ingest' }, 'Add a deliverable'),
+      el('a', { class: 'btn ghost', href: '#/page/synthesis' }, 'What the library knows')));
 
   const groups = {};
   for (const pg of State.pages) {
     if (['index', 'log', 'synthesis'].includes(pg.slug)) continue;
     (groups[pg.meta.type] ||= []).push(pg);
   }
-  for (const [t, items] of Object.entries(groups)) {
-    main.append(el('h2', {}, t + (t === 'entity' ? 'ies' : 's')));
+  const ordered = [...W.PAGE_TYPES, ...Object.keys(groups).filter(t => !W.PAGE_TYPES.includes(t))];
+  for (const t of ordered) {
+    const items = groups[t];
+    if (!items?.length) continue;
+    main.append(el('h2', {}, W.TYPE_LABEL[t] || t));
     const cards = el('div', { class: 'cards' });
     for (const pg of items) {
       const first = W.stripCode(pg.body).split('\n')
@@ -259,62 +269,88 @@ VIEWS.page = slug => {
   return el('div', { class: 'cols' }, nav(slug), pageBody(pg));
 };
 
+function sourceCard(s, extra) {
+  const cited = State.pages.filter(p => W.citesOf(p.body).includes(s.id)).length;
+  return el('div', { class: 'card' },
+    el('a', { href: `#/source/${encodeURIComponent(s.id)}` }, s.title), ' ',
+    s.deliverable ? el('span', { class: 'badge b-established' }, s.deliverable) : null,
+    s.period ? el('span', { class: 'badge' }, s.period) : null,
+    el('p', { class: 'muted' },
+      `${s.client ? s.client + ' · ' : ''}${s.author || 'unknown'} · ${s.published || 'n.d.'} · ` +
+      `cited by ${cited} page${cited === 1 ? '' : 's'}${extra ? ' · ' + extra : ''}`));
+}
+
 VIEWS.search = q => {
   const hits = W.search(State.pages, q);
+  const docs = W.searchSources(State.sources, q);
   const main = el('div', {}, el('h1', {}, 'Search'),
     el('p', { class: 'muted' },
-      `${hits.length} page${hits.length === 1 ? '' : 's'} matching “${q}”. ` +
-      `This is plain text search over the compiled pages — use Ask for a synthesised answer.`));
+      `${hits.length} page${hits.length === 1 ? '' : 's'} and ${docs.length} deliverable` +
+      `${docs.length === 1 ? '' : 's'} matching “${q}”. This is keyword search — use Ask ` +
+      `for a synthesised answer with citations.`));
+  if (docs.length) main.append(el('h2', {}, 'Deliverables'));
+  for (const d of docs) main.append(sourceCard(d.source));
+  if (hits.length) main.append(el('h2', {}, 'Compiled pages'));
   for (const h of hits) {
     main.append(el('div', { class: 'card' },
       el('a', { href: `#/page/${encodeURIComponent(h.page.slug)}` }, h.page.meta.title),
       ' ', el('span', { class: `badge b-${h.page.meta.status}` }, h.page.meta.status),
       el('p', { class: 'muted' }, '…' + h.snippet.replace(/\[\^[^\]]+\]/g, '') + '…')));
   }
-  if (!hits.length) main.append(el('p', {}, 'Nothing matched.'));
+  if (!hits.length && !docs.length) main.append(el('p', {}, 'Nothing matched.'));
   return el('div', { class: 'cols' }, nav(''), main);
 };
 
 VIEWS.source = id => {
   const s = State.sources.find(x => x.id === id);
-  if (!s) return el('div', {}, el('h1', {}, 'Unknown source'), el('a', { href: '#/sources' }, 'All sources'));
+  if (!s) return el('div', {}, el('h1', {}, 'Unknown deliverable'), el('a', { href: '#/sources' }, 'All deliverables'));
   const citedBy = State.pages.filter(p => W.citesOf(p.body).includes(id));
   const main = el('div', {},
     el('h1', {}, s.title),
     el('div', { class: 'meta' },
       el('span', { class: 'mono' }, s.id),
+      s.client ? el('span', {}, s.client) : null,
+      s.deliverable ? el('span', { class: 'badge b-established' }, s.deliverable) : null,
+      s.period ? el('span', {}, s.period) : null,
       el('span', {}, s.author || 'unknown author'),
-      el('span', {}, s.published || 'n.d.'),
+      el('span', {}, `delivered ${s.published || 'n.d.'}`),
       el('span', {}, `added ${s.added}`),
       s.capture === 'summary'
         ? el('span', { class: 'badge b-contested', title: 'not a verbatim capture' }, 'summary')
-        : el('span', { class: 'badge b-established' }, s.capture || 'capture')),
+        : s.capture === 'synthetic'
+          ? el('span', { class: 'badge b-provisional', title: 'invented for the demo' }, 'synthetic')
+          : el('span', { class: 'badge b-established' }, s.capture || 'capture')),
     s.capture === 'summary'
       ? el('p', { class: 'warn', html: '<b>Capture fidelity: summary.</b> This is a fetched summary, not the original text. Quoted wording passed through a summarisation step — re-capture as <code>verbatim</code> before relying on exact quotes.' })
-      : null,
+      : s.capture === 'synthetic'
+        ? el('p', { class: 'muted', html: '<b>Synthetic demo data.</b> This deliverable, its client and every figure in it were invented for this demonstration.' })
+        : null,
     s.url ? el('p', {}, el('a', { href: s.url, target: '_blank', rel: 'noopener' }, s.url)) : null,
     el('h2', {}, 'Cited by'),
     citedBy.length
       ? el('div', {}, ...citedBy.map(p =>
           el('div', {}, el('a', { href: `#/page/${encodeURIComponent(p.slug)}` }, p.meta.title))))
-      : el('p', { class: 'err' }, 'No page cites this source — it is in raw/ but never ingested.'),
-    el('h2', {}, 'Captured text'),
+      : el('p', { class: 'err' }, 'No page cites this deliverable — it is in raw/ but never ingested.'),
+    el('h2', {}, 'Deliverable text'),
     el('pre', {}, el('code', {}, s.body)));
   return el('div', { class: 'cols' }, nav(''), main);
 };
 
 VIEWS.sources = () => {
-  const main = el('div', {}, el('h1', {}, 'Sources'),
+  const main = el('div', {}, el('h1', {}, 'Deliverables'),
     el('p', { class: 'muted' },
-      'The immutable layer. Humans curate these; the compiler never edits them.'));
+      'The immutable layer: the documents the firm actually delivered. Humans add them; ' +
+      'the compiler never edits them. Every citation on a compiled page points at one of these.'));
+  const byClient = new Map();
   for (const s of State.sources) {
-    const cited = State.pages.filter(p => W.citesOf(p.body).includes(s.id)).length;
-    main.append(el('div', { class: 'card' },
-      el('a', { href: `#/source/${encodeURIComponent(s.id)}` }, s.title), ' ',
-      s.capture === 'summary' ? el('span', { class: 'badge b-contested' }, 'summary') : null,
-      el('p', { class: 'muted' },
-        `${s.author || 'unknown'} · ${s.published || 'n.d.'} · cited by ${cited} page` +
-        `${cited === 1 ? '' : 's'}`)));
+    const k = s.client || 'Unassigned';
+    if (!byClient.has(k)) byClient.set(k, []);
+    byClient.get(k).push(s);
+  }
+  for (const [client, items] of [...byClient.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    main.append(el('h2', {}, client));
+    items.sort((a, b) => String(b.published).localeCompare(String(a.published)));
+    for (const s of items) main.append(sourceCard(s));
   }
   return el('div', { class: 'cols' }, nav(''), main);
 };
@@ -322,9 +358,21 @@ VIEWS.sources = () => {
 // ------------------------------------------------------------------- ask
 
 VIEWS.ask = () => {
-  const box = el('textarea', { rows: 3, placeholder: 'Ask the wiki something…' });
+  const box = el('textarea', { rows: 3, placeholder: 'Ask in plain language — which clients, what did we find, what did we recommend…' });
   const out = el('div', { class: 'answer', html: '<span class="muted">The answer will appear here.</span>' });
   const used = el('div', { class: 'used' });
+  const matches = el('div', {});
+
+  function showMatches(q) {
+    matches.replaceChildren();
+    const docs = W.searchSources(State.sources, q).slice(0, 5);
+    if (!docs.length) return;
+    matches.append(el('h2', {}, 'Deliverables that match'),
+      el('p', { class: 'muted' },
+        'Keyword matches over the deliverables themselves — deterministic, no model. ' +
+        'The answer below is compiled from the pages; these are the documents to open.'));
+    for (const d of docs) matches.append(sourceCard(d.source, `${d.matched} term${d.matched === 1 ? '' : 's'} matched`));
+  }
   const go = el('button', { class: 'btn' }, 'Ask');
   let controller = null;
 
@@ -334,6 +382,7 @@ VIEWS.ask = () => {
     go.disabled = true; go.textContent = 'Thinking…';
     out.className = 'answer streaming'; out.textContent = '';
     used.textContent = '';
+    showMatches(q);
     controller = new AbortController();
     let acc = '';
     try {
@@ -360,8 +409,8 @@ VIEWS.ask = () => {
               : el('span', { class: 'mono' }, s + ' '));
           });
         } else {
-          used.append('The wiki could not answer — that is a compiler bug, not a dead end. ' +
-            'Ingest the missing source.');
+          used.append('The library could not answer — either no deliverable covers it, or one ' +
+            'was ingested badly. Add the missing deliverable.');
         }
       }
     } catch (e) {
@@ -379,22 +428,24 @@ VIEWS.ask = () => {
   });
 
   const examples = el('div', { class: 'examples' });
-  for (const q of ['Should compiled pages decay?',
-                   'Do the sources agree on what the pattern is?',
+  for (const q of ['Which clients have we done philanthropic summaries for?',
+                   'What did we tell the Kesslers about funding the lake house?',
+                   'How much did the Abernathy-Ruiz household spend on dining?',
                    'What is the best recipe for sourdough?']) {
     examples.append(el('button', { onclick: () => { box.value = q; ask(); } }, q));
   }
 
   return el('div', {},
-    el('h1', {}, 'Ask the wiki'),
+    el('h1', {}, 'Ask the library'),
     el('p', { class: 'muted' },
-      'Answers come from the compiled pages, not from the raw sources and not from the ' +
-      'model\'s own background knowledge. If the wiki cannot answer, it says so and names ' +
-      'why — that is a compiler bug worth fixing, not a dead end.'),
+      'Natural-language search over what the firm has produced. Answers come from the ' +
+      'compiled client, service and topic pages, with a citation to the deliverable behind ' +
+      'every figure — not from the model\'s own background knowledge. If the library cannot ' +
+      'answer, it says so and names why.'),
     box,
     el('div', { class: 'row' }, go, el('span', { class: 'hint' }, '⌘/Ctrl + Enter')),
     examples,
-    out, used);
+    out, used, matches);
 };
 
 // ---------------------------------------------------------------- ingest
@@ -423,39 +474,50 @@ function diffLines(before, after) {
 
 VIEWS.ingest = () => {
   const f = {
-    id: el('input', { type: 'text', placeholder: 'my-source-id' }),
-    title: el('input', { type: 'text', placeholder: 'Title of the source' }),
-    author: el('input', { type: 'text', placeholder: 'Author' }),
-    url: el('input', { type: 'url', placeholder: 'https://…' }),
-    published: el('input', { type: 'text', placeholder: '2026-08' }),
-    body: el('textarea', { rows: 11, placeholder: 'Paste the source text here…' }),
+    id: el('input', { type: 'text', placeholder: 'client-deliverable-period, e.g. kessler-card-analysis-2026' }),
+    title: el('input', { type: 'text', placeholder: 'Title as it appears on the deliverable' }),
+    client: el('input', { type: 'text', placeholder: 'Client household or “Internal”' }),
+    deliverable: el('input', { type: 'text', placeholder: 'e.g. Cash flow projection' }),
+    period: el('input', { type: 'text', placeholder: 'e.g. 2026 or 2026 Q3' }),
+    author: el('input', { type: 'text', placeholder: 'Team or author' }),
+    published: el('input', { type: 'text', placeholder: 'YYYY-MM-DD delivered' }),
+    body: el('textarea', { rows: 11, placeholder: 'Paste the deliverable text here…' }),
   };
   const out = el('div', {});
-  const go = el('button', { class: 'btn' }, 'Compile into the wiki');
+  const go = el('button', { class: 'btn' }, 'Compile into the library');
 
-  const fill = el('button', { class: 'btn ghost' }, 'Load the adversarial demo source');
+  const fill = el('button', { class: 'btn ghost' }, 'Load the demo deliverable');
   fill.addEventListener('click', () => {
     f.id.value = DEMO_SOURCE.id; f.title.value = DEMO_SOURCE.title;
-    f.author.value = DEMO_SOURCE.author; f.url.value = DEMO_SOURCE.url;
+    f.client.value = DEMO_SOURCE.client; f.deliverable.value = DEMO_SOURCE.deliverable;
+    f.period.value = DEMO_SOURCE.period; f.author.value = DEMO_SOURCE.author;
     f.published.value = DEMO_SOURCE.published; f.body.value = DEMO_SOURCE.body;
-    out.innerHTML = '<div class="ok">Loaded. This source <b>contradicts</b> pages the wiki ' +
-      'currently marks <code>established</code>. Compile it and check the result: does the ' +
-      'compiler mark them contested, or smooth the conflict away? Only the first is a pass.</div>';
+    out.innerHTML = '<div class="ok">Loaded. This deliverable <b>contradicts</b> an assumption ' +
+      'a page the library marks <code>established</code> relies on. Compile it and check the ' +
+      'result: does the compiler record the disagreement, or smooth it away? Only the first ' +
+      'is a pass.</div>';
   });
 
   async function ingest() {
     const meta = {
       id: f.id.value.trim(), title: f.title.value.trim(), author: f.author.value.trim(),
-      url: f.url.value.trim(), published: f.published.value.trim(),
-      added: today(), kind: 'note', capture: 'summary',
+      client: f.client.value.trim(), deliverable: f.deliverable.value.trim(),
+      period: f.period.value.trim(), url: '', published: f.published.value.trim(),
+      added: today(), kind: 'deliverable',
+      capture: f.id.value.trim() === DEMO_SOURCE.id ? 'synthetic' : 'verbatim',
     };
     const text = f.body.value.trim();
     if (!meta.id || !text) {
-      out.innerHTML = '<div class="err">A source id and some text are required.</div>';
+      out.innerHTML = '<div class="err">A deliverable id and some text are required.</div>';
       return;
     }
     if (!/^[a-z0-9][a-z0-9-]*$/.test(meta.id)) {
-      out.innerHTML = '<div class="err">Source id must be lowercase letters, digits and hyphens.</div>';
+      out.innerHTML = '<div class="err">Deliverable id must be lowercase letters, digits and hyphens.</div>';
+      return;
+    }
+    if (State.sources.some(s => s.id === meta.id)) {
+      out.innerHTML = '<div class="err">That id is already in the library. Deliverables are ' +
+        'immutable — add a revision under a new id and let the compiler supersede the old one.</div>';
       return;
     }
     go.disabled = true; go.textContent = 'Compiling…';
@@ -465,7 +527,7 @@ VIEWS.ingest = () => {
     try {
       const { system, user } = P.ingestPrompt(text, meta, State.pages, State.sources);
       await P.run({
-        system, user, maxTokens: 32000, demo: DEMO_INGEST_REPLY,
+        system, user, maxTokens: 32000, demo: demoIngestReply(meta.added, State.pages),
         onText: t => {
           acc += t;
           live.textContent = acc.replace(/```json[\s\S]*$/, '\n\n[building page edits…]');
@@ -475,7 +537,7 @@ VIEWS.ingest = () => {
     } catch (e) {
       out.innerHTML = `<div class="err">${esc(e.message)}</div>`;
     } finally {
-      go.disabled = false; go.textContent = 'Compile into the wiki';
+      go.disabled = false; go.textContent = 'Compile into the library';
     }
   }
 
@@ -516,7 +578,7 @@ VIEWS.ingest = () => {
       class: check.errors.length ? 'err' : 'ok',
       html: check.errors.length
         ? `<b>Lint fails on this proposal: ${check.errors.length} error(s).</b> ` +
-          `Applying it would break the wiki's invariants.<br>` +
+          `Applying it would break the library's invariants.<br>` +
           check.errors.slice(0, 6).map(esc).join('<br>')
         : `<b>Lint passes on this proposal</b> — ${check.warnings.length} warning(s). ` +
           `Links resolve, citations exist, contested pages carry their contradictions. ` +
@@ -558,19 +620,22 @@ VIEWS.ingest = () => {
   go.addEventListener('click', ingest);
 
   return el('div', {},
-    el('h1', {}, 'Ingest a source'),
+    el('h1', {}, 'Add a deliverable'),
     el('p', { class: 'muted' },
-      'Integration is the work: one source should touch many existing pages, not create ' +
-      'one new one. The compiler must also decide whether the source contradicts what the ' +
-      'wiki already says — and record it if so.'),
+      'Integration is the work: one deliverable should update the client page, the ' +
+      'service page and every topic it touches — not create one new page. The compiler ' +
+      'must also decide whether it contradicts or supersedes what the library already ' +
+      'says, and record which.'),
     el('div', { class: 'row' }, fill),
     el('div', { class: 'grid2' },
-      el('label', { class: 'field' }, el('span', {}, 'Source id'), f.id),
+      el('label', { class: 'field' }, el('span', {}, 'Deliverable id'), f.id),
       el('label', { class: 'field' }, el('span', {}, 'Title'), f.title),
-      el('label', { class: 'field' }, el('span', {}, 'Author'), f.author),
-      el('label', { class: 'field' }, el('span', {}, 'Published'), f.published)),
-    el('label', { class: 'field' }, el('span', {}, 'URL'), f.url),
-    el('label', { class: 'field' }, el('span', {}, 'Source text'), f.body),
+      el('label', { class: 'field' }, el('span', {}, 'Client'), f.client),
+      el('label', { class: 'field' }, el('span', {}, 'Deliverable type'), f.deliverable),
+      el('label', { class: 'field' }, el('span', {}, 'Period covered'), f.period),
+      el('label', { class: 'field' }, el('span', {}, 'Author / team'), f.author),
+      el('label', { class: 'field' }, el('span', {}, 'Delivered on'), f.published)),
+    el('label', { class: 'field' }, el('span', {}, 'Deliverable text'), f.body),
     el('div', { class: 'row' }, go),
     out);
 };
@@ -583,14 +648,15 @@ VIEWS.lint = () => {
   const main = el('div', {},
     el('h1', {}, 'Lint'),
     el('p', { class: 'muted' },
-      'Deterministic checks over the wiki as it stands in this browser. Identical rules to ' +
-      'tools/wiki.py — links resolve, citations exist and are declared, contested pages carry ' +
-      'a Contradictions section, no page is older than a source it cites.'),
+      'Deterministic checks over the library as it stands in this browser. Identical rules ' +
+      'to tools/wiki.py — links resolve, every citation points at a real deliverable and is ' +
+      'declared, contested pages carry a Contradictions section, no page is older than a ' +
+      'deliverable it cites.'),
     el('div', {
       class: errors.length ? 'err' : 'ok',
       html: errors.length
         ? `<b>${errors.length} error(s), ${warnings.length} warning(s).</b> The build is broken.`
-        : `<b>Consistent.</b> ${State.pages.length} pages, ${State.sources.length} sources, ` +
+        : `<b>Consistent.</b> ${State.pages.length} pages, ${State.sources.length} deliverables, ` +
           `0 errors, ${warnings.length} warning(s).<br>` +
           `<i>Consistent is not the same as true — no check here reads a page for accuracy.</i>`,
     }));
@@ -606,7 +672,7 @@ VIEWS.lint = () => {
 
   main.append(el('h2', {}, 'Build status'));
   if (!stale.length && !uningested.length) {
-    main.append(el('p', {}, 'Up to date — every source is compiled, every page current.'));
+    main.append(el('p', {}, 'Up to date — every deliverable is compiled, every page current.'));
   } else {
     if (uningested.length) {
       main.append(el('p', { html: '<b>Never ingested:</b> ' +
@@ -618,11 +684,11 @@ VIEWS.lint = () => {
 
   main.append(el('h2', {}, 'What this cannot check'),
     el('p', { class: 'muted' },
-      'Whether a page is true. Whether a claim was asserted more firmly than its single ' +
-      'source supports. Whether two pages quietly say incompatible things without either ' +
-      'being marked contested. Whether the compiler drifted from what a source actually ' +
-      'said while keeping a well-formed citation to it. Those are read by a person, and ' +
-      'that is the part that does not automate.'));
+      'Whether a page is true. Whether a figure was carried over correctly from the ' +
+      'deliverable. Whether two pages quietly say incompatible things without either ' +
+      'being marked contested. Whether the compiler drifted from what a deliverable ' +
+      'actually said while keeping a well-formed citation to it. Those are read by a ' +
+      'person, and that is the part that does not automate.'));
   return el('div', { class: 'cols' }, nav(''), main);
 };
 
@@ -699,7 +765,7 @@ async function boot() {
     State.load(await res.json());
   } catch (e) {
     $('#view').innerHTML =
-      `<div class="err"><b>Could not load the wiki.</b> ${esc(e.message)}<br>` +
+      `<div class="err"><b>Could not load the library.</b> ${esc(e.message)}<br>` +
       `Run <code>python3 tools/build_app.py</code>, then serve the directory over HTTP ` +
       `(<code>python3 -m http.server</code>) — opening index.html from the filesystem ` +
       `will not work, because module and fetch requests are blocked on file:// URLs.</div>`;
@@ -719,7 +785,7 @@ async function boot() {
   renderDirty();
   $('#export-btn').addEventListener('click', exportChanges);
   $('#reset-btn').addEventListener('click', () => {
-    if (confirm('Discard all changes compiled in this browser? The shipped wiki is unaffected.'))
+    if (confirm('Discard all changes compiled in this browser? The shipped library is unaffected.'))
       { State.reset(); Router.go(); }
   });
   addEventListener('hashchange', () => Router.go());

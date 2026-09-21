@@ -25,7 +25,7 @@ body
 
 GOOD = """---
 title: Good page
-type: concept
+type: topic
 status: established
 updated: 2026-02-01
 sources:
@@ -42,7 +42,7 @@ A claim [^src-a]. Links to [[other]], [[third]] and [[fourth]].
 def stub(title, extra_links=""):
     return f"""---
 title: {title}
-type: concept
+type: topic
 status: established
 updated: 2026-02-01
 sources:
@@ -136,7 +136,7 @@ class LintTest(unittest.TestCase):
         self.assertFlags("frontmatter missing 'status'", self.run_lint())
 
     def test_bad_type_value(self):
-        self.page("good", GOOD.replace("type: concept", "type: banana"))
+        self.page("good", GOOD.replace("type: topic", "type: banana"))
         self.assertFlags("type 'banana' not in", self.run_lint())
 
     def test_bad_status_value(self):
@@ -146,7 +146,7 @@ class LintTest(unittest.TestCase):
     def test_superseded_needs_forward_link(self):
         self.page("lonely", """---
 title: Lonely
-type: concept
+type: topic
 status: superseded
 updated: 2026-02-01
 sources: []

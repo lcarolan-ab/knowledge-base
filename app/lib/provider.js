@@ -53,9 +53,11 @@ export function setProxy(u) { try { localStorage.setItem(PROXY_STORAGE, u); } ca
 
 // ------------------------------------------------------------------- prompts
 
-const RULES = `You are the compiler for an LLM wiki. Knowledge is compiled once
-from raw sources into interlinked markdown pages and kept current — never
-re-derived per question.
+const RULES = `You are the compiler for a firm's deliverables library, built as an
+LLM wiki. The raw sources are the firm's deliverables (credit card analyses, cash
+flow projections, giving summaries, reviews, internal standards). They are compiled
+once into interlinked client, service and topic pages and kept current — never
+re-derived per question. Page types: client | service | topic | question | overview.
 
 Non-negotiable rules:
 - Every factual claim carries a citation [^source-id]. Your own reasoning across
@@ -75,9 +77,11 @@ function wikiContext(pages, limit = 40) {
 }
 
 function sourceList(sources) {
-  return sources.map(s =>
-    `- ${s.id} — "${s.title}" (${s.author || 'unknown'}, ${s.published || 'n.d.'})`)
-    .join('\n');
+  return sources.map(s => {
+    const tags = [s.client, s.deliverable, s.period].filter(Boolean).join(' · ');
+    return `- ${s.id} — "${s.title}"${tags ? ` [${tags}]` : ''} ` +
+      `(${s.author || 'unknown'}, ${s.published || 'n.d.'})`;
+  }).join('\n');
 }
 
 // --------------------------------------------------------------------- query
@@ -86,13 +90,17 @@ export function queryPrompt(question, pages, sources) {
   return {
     system: `${RULES}
 
-You are answering from the COMPILED WIKI below. Rules for answering:
+You are answering from the COMPILED WIKI below — the library's client, service and
+topic pages. Rules for answering:
 - Answer from these pages, not from your own background knowledge.
-- Carry citations through from the pages you use.
+- Carry citations through from the pages you use. Citations are deliverable ids,
+  so the reader can open the deliverable itself.
+- When the question is "which clients" or "what have we done", answer with a list or
+  table and name the deliverable behind each row.
 - If the pages disagree, report it as contested and name both sides.
 - If the wiki cannot answer, say so plainly and say which of these it is:
-  (a) the source was never ingested, (b) it was ingested but the claim never
-  made it onto a page, (c) no source covers this. Do NOT fill the gap from your
+  (a) the deliverable was never ingested, (b) it was ingested but the claim
+  never made it onto a page, (c) no deliverable covers this. Do NOT fill the gap from your
   own knowledge and present it as compiled — that is the one failure that makes
   a wiki untrustworthy.
 - End with a line "PAGES USED: slug, slug" listing the pages you actually used.
@@ -112,9 +120,10 @@ export function ingestPrompt(sourceText, meta, pages, sources) {
   return {
     system: `${RULES}
 
-You are running the INGEST operation: folding one new source into an existing
-wiki. Integration is the work — a new page is the exception. Expect to touch
-many existing pages, not to file one new one.
+You are running the INGEST operation: folding one new deliverable into the
+library. Integration is the work — a new page is the exception. Update the
+client page, the service page for this kind of deliverable, and every topic page
+the deliverable touches. Create a client or service page only if none exists.
 
 For each page the source touches:
 - fold the claim into the existing prose (do not append "a new source says...")
@@ -148,12 +157,14 @@ claim unless the new source overturns it. action is "update" or "create".
 
 === COMPILED WIKI ===
 ${wikiContext(pages)}`,
-    user: `New source to ingest.
+    user: `New deliverable to ingest.
 
 id: ${meta.id}
 title: ${meta.title}
+client: ${meta.client || 'unknown'}
+deliverable: ${meta.deliverable || 'unknown'}
+period: ${meta.period || 'n/a'}
 author: ${meta.author || 'unknown'}
-url: ${meta.url || 'n/a'}
 published: ${meta.published || 'n.d.'}
 capture: ${meta.capture}
 
