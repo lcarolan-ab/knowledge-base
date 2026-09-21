@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wiki.py — deterministic tooling for an LLM wiki.
+"""wiki.py — deterministic tooling for an LLM wiki (here, a deliverables library).
 
 The LLM compiles raw/ into wiki/. This script checks the build.
 No API key, no network, no LLM: it verifies mechanical invariants only.
@@ -26,7 +26,8 @@ ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "raw"
 WIKI = ROOT / "wiki"
 
-PAGE_TYPES = {"concept", "entity", "comparison", "question", "overview"}
+PAGE_TYPES = {"client", "service", "topic", "question", "overview"}
+TYPE_ORDER = ("overview", "client", "service", "topic", "question")
 STATUSES = {"established", "contested", "provisional", "superseded"}
 REQUIRED = ("title", "type", "status", "updated", "sources")
 # Pages exempt from the orphan check and from body-level citation rules.
@@ -335,7 +336,7 @@ def cmd_index(args) -> int:
         f"{len(pages)} pages compiled from {len(sources)} sources in `raw/`.",
         "",
     ]
-    for ptype in ("concept", "entity", "comparison", "question", "overview"):
+    for ptype in TYPE_ORDER:
         group = by_type.get(ptype)
         if not group:
             continue
@@ -442,9 +443,9 @@ def main() -> int:
     sub.add_parser("graph", help="emit link graph as mermaid").set_defaults(fn=cmd_graph)
     sub.add_parser("stats", help="counts and coverage").set_defaults(fn=cmd_stats)
     n = sub.add_parser("new", help="scaffold a page")
-    n.add_argument("slug", help="e.g. concepts/knowledge-decay")
+    n.add_argument("slug", help="e.g. topics/unused-subscriptions")
     n.add_argument("--title")
-    n.add_argument("--type", default="concept", choices=sorted(PAGE_TYPES))
+    n.add_argument("--type", default="topic", choices=sorted(PAGE_TYPES))
     n.add_argument("--status", default="provisional", choices=sorted(STATUSES))
     n.set_defaults(fn=cmd_new)
     args = ap.parse_args()

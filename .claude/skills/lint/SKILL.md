@@ -21,10 +21,10 @@ Fix every error. Common causes:
 |---|---|
 | `broken link [[x]]` | create the page, or repair the link |
 | `cites [^x] but omits it from frontmatter` | add it to `sources:` |
-| `citation [^x] has no source in raw/` | you invented a citation — find the real source or drop the claim |
+| `citation [^x] has no source in raw/` | you invented a citation — find the real deliverable or drop the claim |
 | `status 'contested' requires a '## Contradictions' section` | write it, naming who claims what |
 | `stale: source newer than page` | recompile the page against that source |
-| `source is in raw/ but no wiki page cites it` | run the ingest skill on it |
+| `source is in raw/ but no wiki page cites it` | a deliverable nobody compiled — run the ingest skill on it |
 | `orphan — no page links here` | link it from a relevant page, or delete it |
 | `uncited assertion` | cite it, or mark it `[^synthesis]` if it is your own reasoning |
 
@@ -32,10 +32,14 @@ Fix every error. Common causes:
 
 The linter cannot tell you a page is wrong. Read for what it cannot see:
 
-- **Confident nonsense.** Is any claim asserted more firmly than its single source
+- **Wrong figures.** Open the deliverable and check a sample of numbers against the
+  page. A well-formed citation next to a wrong number passes every mechanical check.
+- **Confident nonsense.** Is any claim asserted more firmly than its single deliverable
   supports? Downgrade to `provisional`.
-- **Unmarked contradictions.** Two pages quietly saying incompatible things — the linter
-  only checks that *already-marked* contested pages do their bookkeeping.
+- **Unmarked contradictions and supersessions.** Two pages quietly saying incompatible
+  things, or a revised deliverable whose predecessor's conclusions still stand on a page
+  unmarked — the linter only checks that *already-marked* contested pages do their
+  bookkeeping.
 - **Drift.** Terminology that has diverged between pages compiled at different times.
 - **Never-challenged claims.** A page with one source, cited once, never revisited, is
   indistinguishable from a well-tested one. Flag the ones you would not bet on.
