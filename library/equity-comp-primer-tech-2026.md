@@ -9,10 +9,10 @@ date: 2026-01
 format: slides
 pages: 17
 file: files/equity-comp-primer-tech-2026.pptx
-author: Wei Zhang
-author_role: Wealth Strategist
-author_email: wei.zhang@example.com
-contributors: [Daniel Okafor <daniel.okafor@example.com>]
+author: Gavin Coveney, JD
+author_role: Client Service Associate
+contributors:
+  - Rachel Malin, CPA
 ---
 
 Explains RSUs, ISOs and the ESPP for a 28-year-old engineer whose company stock is now

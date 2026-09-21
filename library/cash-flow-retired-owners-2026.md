@@ -9,10 +9,11 @@ date: 2026-05
 format: slides
 pages: 26
 file: files/cash-flow-retired-owners-2026.pptx
-author: Daniel Okafor
-author_role: Planner, Financial Planning
-author_email: daniel.okafor@example.com
-contributors: [Tom Reyes <tom.reyes@example.com>]
+author: Rachel Malin, CPA
+author_role: Client Service Associate
+contributors:
+  - Greg Stokke, CFA, CFP
+  - Anna Sears, CFA
 ---
 
 Revision of a November 2025 projection after the clients decided to buy a $1.9 million

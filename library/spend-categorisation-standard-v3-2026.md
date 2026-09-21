@@ -9,10 +9,11 @@ date: 2026-07
 format: document
 pages: 4
 file: files/spend-categorisation-standard-v3-2026.docx
-author: Marcus Bell
-author_role: Senior Analyst, Client Analytics
-author_email: marcus.bell@example.com
-contributors: [Hannah Lindqvist <hannah.lindqvist@example.com>]
+author: Andrew Ogle, CPA
+author_role: Manager
+contributors:
+  - Logan Carolan
+  - Voula Francis, JD, CFP, TEP
 ---
 
 The rules every credit card analysis follows from Q3 2026: category definitions, the

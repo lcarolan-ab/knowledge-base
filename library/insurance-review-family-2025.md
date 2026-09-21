@@ -9,10 +9,10 @@ date: 2025-12
 format: pdf
 pages: 9
 file: files/insurance-review-family-2025.pdf
-author: Tom Reyes
-author_role: Portfolio Analyst, Investments
-author_email: tom.reyes@example.com
-contributors: [Wei Zhang <wei.zhang@example.com>]
+author: Liz Goldenberg, CPA
+author_role: Client team lead
+contributors:
+  - Gavin Coveney, JD
 ---
 
 Found the household under-insured on term life (coverage at 4x income against a need of

@@ -26,10 +26,10 @@ const ok = (v, m) => { if (!v) throw new Error(m || 'expected truthy'); };
 const top = q => S.search(data, q).results[0]?.item.id;
 
 console.log('\ncatalogue');
-test('every item has a type, an audience, an author with an email, and an outline', () => {
+test('every item has a type, an audience, an author with a role, and an outline', () => {
   for (const it of data.items) {
     ok(it.type, `${it.id} has no type`); ok(it.audiences.length, `${it.id} has no audience`);
-    ok(/@/.test(it.author.email), `${it.id} author has no email`); ok(it.outline.length, `${it.id} has no outline`);
+    ok(it.author.name && it.author.role, `${it.id} author lacks a name or role`); ok(it.outline.length, `${it.id} has no outline`);
   }
 });
 test('tags all come from the taxonomy', () => {
@@ -76,9 +76,9 @@ test('template answer says yes, no, or not exactly', () => {
   ok(S.templateAnswer('q', S.search(data, 'cash flow for someone retiring to Portugal')).startsWith('Not exactly') ||
      S.templateAnswer('q', S.search(data, 'cash flow for someone retiring to Portugal')).startsWith('Yes'));
 });
-test('people are ranked from the results and carry email', () => {
+test('people are ranked from the results', () => {
   const ppl = S.people(S.search(data, 'credit card analysis for a new grad').results);
-  eq(ppl[0].email, 'priya.natarajan@example.com'); ok(ppl[0].items.length >= 1);
+  eq(ppl[0].name, data.items.find(i => i.id === 'cc-analysis-new-grad-2025').author.name); ok(ppl[0].items.length >= 1);
 });
 test('browse filters compose', () => {
   eq(S.filterItems(data.items, { audience: 'new grad' }).length, 3);
@@ -87,7 +87,7 @@ test('browse filters compose', () => {
   eq(S.filterItems(data.items, {}).length, data.items.length);
 });
 test('helpers', () => {
-  eq(S.monthName('2025-09'), 'Sep 2025'); eq(S.initials('Priya Natarajan'), 'PN');
+  eq(S.monthName('2025-09'), 'Sep 2025'); eq(S.initials('Priya Natarajan'), 'PN'); eq(S.initials('Jane Doe, CFA, CFP'), 'JD');
   ok(S.teamsLink('a@b.c').includes(encodeURIComponent('a@b.c')));
 });
 
@@ -95,12 +95,12 @@ console.log('\nmodel contract');
 test('the prompt carries the whole catalogue with authors', () => {
   const { system } = P.askPrompt('q', data);
   for (const it of data.items) ok(system.includes(`id: ${it.id}`), `missing ${it.id}`);
-  ok(system.includes('priya.natarajan@example.com'));
+  ok(system.includes(data.items[0].author.name));
   ok(system.includes('Never invent'));
 });
 test('a well-formed reply parses and resolves ids to items', () => {
   const r = P.parseReply('Sure:\n{"answer":"Yes, see below.","matches":[{"id":"cc-analysis-new-grad-2025","reason":"exact"},{"id":"nope","reason":"x"}]}', data);
-  ok(r.ok, r.error); eq(r.matches.length, 1); eq(r.matches[0].item.author.name, 'Priya Natarajan');
+  ok(r.ok, r.error); eq(r.matches.length, 1); eq(r.matches[0].item.author.name, data.items.find(i => i.id === 'cc-analysis-new-grad-2025').author.name);
 });
 test('malformed replies fail gracefully', () => {
   for (const bad of ['no json', '{"answer": 1}', '{"matches": []}', '']) {

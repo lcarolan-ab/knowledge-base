@@ -8,7 +8,7 @@ existing deliverables and the people who made them.
 library/*.md            one record per deliverable (demo data; SharePoint in production)
 library/taxonomy.json   the tags and their synonyms — what makes "new grad" find "recent graduate"
 tools/build_library.py  validates records, bundles app/data/library.json
-app/                    the static app: Ask · Browse · People
+app/                    the static app: Ask · Browse
 app/lib/search.js       taxonomy-aware search; the floor that works with no model
 app/lib/provider.js     optional model over the catalogue (direct key or proxy)
 app/lib/sharepoint.js   read the catalogue from a SharePoint library via Graph
@@ -19,11 +19,12 @@ archive/llm-wiki/       the earlier LLM-wiki prototype, kept for reference only
 
 ## Working on it
 
-- **Everything in `library/` is synthetic.** Clients, people, emails and figures are
-  invented. Never add real client data to this repo; in production the catalogue comes
-  from SharePoint.
+- **The deliverables in `library/` are synthetic.** Clients and figures are invented.
+  Authors are ArchBridge team members, named and titled as on archbridge.com, with no
+  contact details stored. Never add real client data to this repo; in production the
+  catalogue comes from SharePoint.
 - **Adding a demo deliverable:** copy a file in `library/`, keep `id` equal to the file
-  name, use only tags from `library/taxonomy.json`, give the author an email, write a
+  name, use only tags from `library/taxonomy.json`, name the author and their role, write a
   two-to-four sentence summary and an `## Outline` list. Then
   `python3 tools/build_library.py` (it lints first and refuses bad records).
 - **Adding a tag or synonym:** edit `library/taxonomy.json`. Aliases are matched as

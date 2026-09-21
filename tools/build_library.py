@@ -7,6 +7,7 @@
 One markdown file per deliverable in library/, with frontmatter for the index fields
 and a short body: a summary paragraph, then an "## Outline" list of slide titles.
 Tags must come from library/taxonomy.json, so the search can rely on them.
+Author email is optional; in production it comes from SharePoint's Created By.
 Standard library only.
 """
 from __future__ import annotations
@@ -25,9 +26,9 @@ TAXONOMY = LIBRARY / "taxonomy.json"
 OUT = ROOT / "app" / "data" / "library.json"
 
 REQUIRED = ("id", "title", "type", "audiences", "topics", "client", "date", "format",
-            "file", "author", "author_role", "author_email")
+            "file", "author", "author_role")
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-CONTRIB_RE = re.compile(r"^\s*(.+?)\s*<([^>]+)>\s*$")
+CONTRIB_RE = re.compile(r"^\s*(.+?)\s*(?:<([^>]+)>)?\s*$")
 
 
 def parse_frontmatter(text: str) -> tuple[dict, str]:
@@ -113,8 +114,9 @@ def lint(records, tax) -> list[str]:
         if meta.get("author_email") and not EMAIL_RE.match(str(meta["author_email"])):
             err(f"author_email '{meta['author_email']}' is not an email address")
         for c in meta.get("contributors") or []:
-            if not CONTRIB_RE.match(c):
-                err(f"contributor '{c}' must be 'Name <email>'")
+            cm = CONTRIB_RE.match(c)
+            if not cm or (cm.group(2) and not EMAIL_RE.match(cm.group(2))):
+                err(f"contributor '{c}' must be 'Name' or 'Name <email>'")
         summary, outline = parse_body(body)
         if len(summary.split()) < 20:
             err("summary is under 20 words — say what the deliverable found or recommends")
@@ -140,7 +142,7 @@ def bundle(records, tax) -> dict:
         for c in meta.get("contributors") or []:
             m = CONTRIB_RE.match(c)
             if m:
-                contributors.append({"name": m.group(1), "email": m.group(2)})
+                contributors.append({"name": m.group(1), "email": m.group(2) or ""})
         items.append({
             "id": meta["id"], "title": meta["title"], "type": meta["type"],
             "audiences": meta.get("audiences") or [], "topics": meta.get("topics") or [],

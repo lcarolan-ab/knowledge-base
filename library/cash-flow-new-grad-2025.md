@@ -9,10 +9,10 @@ date: 2025-10
 format: slides
 pages: 18
 file: files/cash-flow-new-grad-2025.pptx
-author: Daniel Okafor
-author_role: Planner, Financial Planning
-author_email: daniel.okafor@example.com
-contributors: [Priya Natarajan <priya.natarajan@example.com>]
+author: Rachel Malin, CPA
+author_role: Client Service Associate
+contributors:
+  - Andrew Stange, CFA
 ---
 
 Companion to the new-graduate card analysis for the same client. Models a $78,000

@@ -9,10 +9,10 @@ date: 2025-08
 format: document
 pages: 6
 file: files/benefits-election-new-hire-2025.docx
-author: Priya Natarajan
-author_role: Associate, Client Analytics
-author_email: priya.natarajan@example.com
-contributors: [Daniel Okafor <daniel.okafor@example.com>]
+author: Andrew Stange, CFA
+author_role: Associate
+contributors:
+  - Rachel Malin, CPA
 ---
 
 A reusable guide we send to clients starting a first job: how to read the benefits

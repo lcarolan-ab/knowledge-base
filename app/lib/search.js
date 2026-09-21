@@ -107,12 +107,13 @@ export function search(data, q, opts = {}) {
 export function people(results, limit = 4) {
   const byEmail = new Map();
   const add = (p, weight, item, role) => {
-    if (!p?.email) return;
-    const rec = byEmail.get(p.email) || { ...p, weight: 0, items: [] };
+    const key = p?.email || p?.name;
+    if (!key) return;
+    const rec = byEmail.get(key) || { ...p, weight: 0, items: [] };
     rec.weight += weight;
     rec.items.push({ id: item.id, title: item.title, role });
     if (!rec.role && p.role) rec.role = p.role;
-    byEmail.set(p.email, rec);
+    byEmail.set(key, rec);
   };
   results.forEach((r, i) => {
     const w = (results.length - i);
@@ -174,5 +175,6 @@ export function teamsLink(email) {
 }
 
 export function initials(name) {
-  return String(name || '?').split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+  // Ignore credentials after a comma ("Jane Doe, CFA").
+  return String(name || '?').split(',')[0].trim().split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
 }

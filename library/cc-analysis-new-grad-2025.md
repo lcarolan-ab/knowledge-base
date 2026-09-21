@@ -9,10 +9,10 @@ date: 2025-09
 format: slides
 pages: 14
 file: files/cc-analysis-new-grad-2025.pptx
-author: Priya Natarajan
-author_role: Associate, Client Analytics
-author_email: priya.natarajan@example.com
-contributors: [Marcus Bell <marcus.bell@example.com>]
+author: Andrew Stange, CFA
+author_role: Associate
+contributors:
+  - Andrew Ogle, CPA
 ---
 
 Built for a 23-year-old starting a first job at $78,000 with one student card and a

@@ -42,8 +42,8 @@ function catalogue(data) {
   return data.items.map(it =>
     `- id: ${it.id}\n  title: ${it.title}\n  type: ${it.type}\n  audiences: ${it.audiences.join(', ')}\n` +
     `  topics: ${it.topics.join(', ')}\n  client: ${it.client}\n  date: ${it.date}\n` +
-    `  author: ${it.author.name} (${it.author.role}, ${it.author.email})\n` +
-    (it.contributors.length ? `  contributors: ${it.contributors.map(c => `${c.name} (${c.email})`).join(', ')}\n` : '') +
+    `  author: ${it.author.name} (${it.author.role})\n` +
+    (it.contributors.length ? `  contributors: ${it.contributors.map(c => c.name).join(', ')}\n` : '') +
     `  summary: ${it.summary}`).join('\n');
 }
 

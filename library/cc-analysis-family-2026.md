@@ -9,10 +9,10 @@ date: 2026-02
 format: slides
 pages: 22
 file: files/cc-analysis-family-2026.pptx
-author: Marcus Bell
-author_role: Senior Analyst, Client Analytics
-author_email: marcus.bell@example.com
-contributors: [Priya Natarajan <priya.natarajan@example.com>]
+author: Andrew Ogle, CPA
+author_role: Manager
+contributors:
+  - Andrew Stange, CFA
 ---
 
 Full-year review of $187,000 of card spend across three cards for a two-earner household

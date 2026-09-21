@@ -5,15 +5,16 @@
 A tagged, indexed library of a firm's deliverables — credit card analyses, cash flow
 projections, giving summaries, estate reviews, primers, memos — with a chat box that
 answers questions like *"have we ever done a credit card analysis for a new grad?"* by
-surfacing the existing deliverables, with the author's name, email and a Teams link so
-you can reach out directly.
+surfacing the existing deliverables and who made them, so you can go straight to the
+right person.
 
 Works with no model at all: the search understands the library's tags and their
 synonyms. Connect a model for better handling of unusual phrasing. Reads its catalogue
 from a bundled demo file or, in production, straight from a **SharePoint document
 library**, and hosts on **Azure Static Web Apps**.
 
-**All demo data is synthetic.** Every client, person, email and figure was invented.
+**The demo deliverables are synthetic.** Every client and figure was invented. The
+authors are ArchBridge team members, named and titled as on archbridge.com.
 
 ## Try it
 
@@ -24,9 +25,8 @@ python3 -m http.server -d app 8765        # open http://localhost:8765
 
 | tab | what it does |
 |---|---|
-| **Ask** | plain-language question → short answer, the matching deliverables as cards, the people to contact |
+| **Ask** | plain-language question → short answer, the matching deliverables as cards with their authors |
 | **Browse** | every deliverable, filterable by type, audience, year, or words |
-| **People** | who has made what, with email and Teams links |
 
 Checks: `python3 tools/test_library.py` (the validator), `node tools/test_app.mjs`
 (search, model contract, SharePoint mapping). Python 3.9+ and Node 20; nothing to install.
@@ -39,9 +39,9 @@ SharePoint    ──Graph──▶  same shape, at runtime  ──▶  provider.
 ```
 
 - **Records.** One markdown file per deliverable in `library/` with frontmatter: type,
-  audiences, topics, client, date, file, author with email, contributors, plus a summary
+  audiences, topics, client, date, file, author and role, contributors, plus a summary
   and an outline. `tools/build_library.py` refuses a record with an unknown tag, a
-  missing email, or a thin summary.
+  missing author, or a thin summary.
 - **Taxonomy.** `library/taxonomy.json` holds the types, audience tags and topic tags,
   each with aliases. "New grad", "recent graduate", "first job" and "entry level" all
   resolve to the same tag, so the question and the record meet even when the words
@@ -51,8 +51,6 @@ SharePoint    ──Graph──▶  same shape, at runtime  ──▶  provider.
 - **Model.** With a key or a proxy, `app/lib/provider.js` sends the whole catalogue
   (it is small) and the question, and asks for JSON naming the matching deliverables.
   A reply that cannot be parsed falls back to the search, so the page never goes blank.
-- **People.** Authors and contributors of the top results, ranked by involvement, with
-  `mailto:` and Teams deep links.
 
 ## Connect it to SharePoint
 
@@ -82,7 +80,7 @@ GitHub copy the repo as-is and the root `index.html` redirects to `app/`.
 
 | path | what it is |
 |---|---|
-| `library/` | 16 synthetic deliverable records and the taxonomy |
+| `library/` | 16 synthetic deliverable records (ArchBridge authors) and the taxonomy |
 | `app/` | the app: `index.html`, `app.css`, `app.js`, `config.js`, `lib/`, `data/` |
 | `api/` | Azure Functions backend (`/api/ask`) |
 | `tools/build_library.py` | validate and bundle the records |
@@ -95,7 +93,7 @@ GitHub copy the repo as-is and the root `index.html` redirects to `app/`.
 ## Adding a deliverable to the demo
 
 Copy any file in `library/`, keep `id` equal to the file name, use tags from the
-taxonomy, give the author an email, write a two-to-four sentence summary of what it
+taxonomy, name the author and their role, write a two-to-four sentence summary of what it
 found or recommended, list the slide titles under `## Outline`, then run
 `python3 tools/build_library.py`. In production, filing the file in SharePoint with its
 columns filled in is the whole step.
