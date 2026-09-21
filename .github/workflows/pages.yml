@@ -1,8 +1,12 @@
 name: publish the demo to GitHub Pages
 
+# Deploys from the repository's default branch, whatever it is called. Requires
+# Pages to be set to "GitHub Actions" (Settings → Pages → Source); with "Deploy
+# from a branch" GitHub runs its own Jekyll build instead, and the .nojekyll file
+# at the repo root keeps that build from choking on the markdown records.
+
 on:
   push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -37,7 +41,7 @@ jobs:
         with: { path: site }
 
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
     needs: build
     runs-on: ubuntu-latest
     environment:

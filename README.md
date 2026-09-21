@@ -73,7 +73,10 @@ One Azure Static Web App hosts the page, gates it behind Entra sign-in, and runs
 Step by step: [`docs/deploy-azure.md`](docs/deploy-azure.md).
 
 `.github/workflows/pages.yml` publishes the demo (no SharePoint, no model) to GitHub
-Pages, and `proxy/worker.js` is a Cloudflare Worker for hosting the key outside Azure.
+Pages from the default branch; set Pages to **Source: GitHub Actions** for it to
+deploy. If Pages is left on "Deploy from a branch", the `.nojekyll` file makes
+GitHub copy the repo as-is and the root `index.html` redirects to `app/`.
+`proxy/worker.js` is a Cloudflare Worker for hosting the key outside Azure.
 
 ## What's here
 
