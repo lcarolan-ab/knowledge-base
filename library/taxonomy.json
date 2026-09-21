@@ -1,0 +1,48 @@
+{
+  "types": [
+    {"name": "Credit card analysis", "aliases": ["credit card", "credit cards", "card analysis", "card spend", "card strategy", "cc analysis"]},
+    {"name": "Cash flow projection", "aliases": ["cash flow", "cashflow", "projection", "budget projection", "savings projection"]},
+    {"name": "Philanthropic giving summary", "aliases": ["philanthropy", "philanthropic", "giving summary", "charitable summary", "giving"]},
+    {"name": "Estate and liquidity review", "aliases": ["estate", "estate review", "liquidity review", "estate plan"]},
+    {"name": "Investment performance summary", "aliases": ["performance", "performance summary", "quarterly review", "portfolio review"]},
+    {"name": "Student loan analysis", "aliases": ["student loan", "student loans", "loan repayment", "loan analysis"]},
+    {"name": "Equity compensation primer", "aliases": ["equity comp", "equity compensation", "stock comp", "rsu primer", "options primer"]},
+    {"name": "Home purchase analysis", "aliases": ["home purchase", "rent vs buy", "rent versus buy", "buying a home", "first home", "mortgage analysis"]},
+    {"name": "Insurance review", "aliases": ["insurance", "coverage review", "insurance coverage"]},
+    {"name": "Benefits election guide", "aliases": ["benefits", "benefits election", "open enrollment", "open enrolment", "401k guide"]},
+    {"name": "Methodology memo", "aliases": ["methodology", "standard", "internal memo", "how we do"]}
+  ],
+  "audiences": [
+    {"tag": "new grad", "aliases": ["new graduate", "recent graduate", "recent grad", "fresh graduate", "just graduated", "college graduate", "first job", "entry level", "entry-level", "new hire", "graduating", "graduate"]},
+    {"tag": "early career", "aliases": ["young professional", "young professionals", "twenties", "20s", "junior", "young couple", "starting out", "first years"]},
+    {"tag": "physician", "aliases": ["doctor", "doctors", "medical resident", "resident", "surgeon", "md", "medicine"]},
+    {"tag": "tech employee", "aliases": ["engineer", "software engineer", "startup employee", "tech", "product manager"]},
+    {"tag": "family with children", "aliases": ["family", "families", "young children", "kids", "parents", "dual-income", "dual income", "household with kids"]},
+    {"tag": "high earner", "aliases": ["executive", "executives", "high income", "high-income", "high net worth", "hnw"]},
+    {"tag": "founder", "aliases": ["co-founder", "cofounder", "entrepreneur", "startup founder"]},
+    {"tag": "business owner", "aliases": ["owner", "sold a business", "sold their business", "business sale", "exit"]},
+    {"tag": "retiree", "aliases": ["retired", "retirement", "retired couple", "pensioner", "retirees", "in retirement"]},
+    {"tag": "internal", "aliases": ["staff", "our team", "analysts", "internal"]}
+  ],
+  "topics": [
+    {"tag": "credit cards", "aliases": ["card", "cards", "annual fee", "credit score", "credit limit"]},
+    {"tag": "rewards", "aliases": ["points", "miles", "cash back", "cashback", "reward"]},
+    {"tag": "subscriptions", "aliases": ["recurring charges", "subscription", "unused subscriptions"]},
+    {"tag": "budgeting", "aliases": ["budget", "spending", "spend", "savings rate", "saving", "expenses"]},
+    {"tag": "student loans", "aliases": ["pslf", "loan forgiveness", "refinancing", "refinance", "income-driven", "idr"]},
+    {"tag": "emergency fund", "aliases": ["cash reserve", "cash buffer", "rainy day"]},
+    {"tag": "401(k)", "aliases": ["401k", "employer match", "retirement plan", "hsa", "roth 401k"]},
+    {"tag": "charitable giving", "aliases": ["donor-advised fund", "daf", "donations", "donate", "charity", "charities", "foundation", "grants", "bunching"]},
+    {"tag": "estate planning", "aliases": ["grat", "trust", "trusts", "exemption", "ilit", "will", "inheritance"]},
+    {"tag": "concentrated stock", "aliases": ["single stock", "concentration", "10b5-1", "diversify", "diversification"]},
+    {"tag": "equity compensation", "aliases": ["rsu", "rsus", "iso", "isos", "stock options", "options", "vesting", "vest", "espp", "83(b)"]},
+    {"tag": "home purchase", "aliases": ["mortgage", "down payment", "downpayment", "house", "condo", "buy a home", "buy a house"]},
+    {"tag": "insurance", "aliases": ["life insurance", "disability insurance", "disability", "umbrella", "term life", "coverage"]},
+    {"tag": "retirement income", "aliases": ["withdrawal rate", "rmd", "rmds", "roth conversion", "social security", "drawdown", "sustainable spending"]},
+    {"tag": "tax planning", "aliases": ["tax", "taxes", "deduction", "deductions", "capital gains", "tax bracket"]},
+    {"tag": "investment performance", "aliases": ["benchmark", "returns", "allocation", "asset allocation", "rebalancing", "portfolio"]},
+    {"tag": "large purchase", "aliases": ["lake house", "second home", "vacation home", "big purchase", "pledged asset line", "borrow vs sell"]},
+    {"tag": "spend categorisation", "aliases": ["categorisation", "categorization", "categories", "merchant categories"]}
+  ],
+  "formats": ["slides", "pdf", "spreadsheet", "document"]
+}

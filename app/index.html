@@ -4,32 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Deliverables library</title>
-<meta name="description" content="A library of a firm's deliverables, compiled into a knowledge base you can search in plain language. Demo with synthetic clients.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
+<meta name="description" content="Ask what the firm has already made. Get the matching deliverables and the people who made them.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='20' width='80' height='60' rx='8' fill='%231d5c7a'/><rect x='22' y='34' width='56' height='6' rx='3' fill='white'/><rect x='22' y='48' width='40' height='6' rx='3' fill='white' opacity='.7'/></svg>">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 
 <header>
   <div class="bar">
-    <a class="brand" href="#/">🗂️ <b>Deliverables library</b></a>
+    <a class="brand" href="#/">Deliverables library</a>
     <nav class="tabs">
-      <a href="#/" data-tab="read">Browse</a>
-      <a href="#/ask" data-tab="ask">Ask</a>
-      <a href="#/sources" data-tab="sources">Deliverables</a>
-      <a href="#/ingest" data-tab="ingest">Add</a>
-      <a href="#/lint" data-tab="lint">Lint</a>
+      <a href="#/" data-tab="ask">Ask</a>
+      <a href="#/browse" data-tab="browse">Browse</a>
+      <a href="#/people" data-tab="people">People</a>
     </nav>
     <div class="bar-right">
-      <span id="mode-chip" class="chip" title="Which compiler backend is active"></span>
-      <button id="open-settings" class="btn ghost">Settings</button>
+      <span id="mode-chip" class="chip" title="Which answering backend is active"></span>
+      <button id="open-settings" class="btn ghost small">Settings</button>
     </div>
-  </div>
-  <div id="dirty-bar" class="dirty" hidden>
-    <span id="dirty-text"></span>
-    <span class="spacer"></span>
-    <button id="export-btn" class="btn small">Export changed files</button>
-    <button id="reset-btn" class="btn small ghost">Discard local changes</button>
   </div>
 </header>
 
@@ -38,46 +30,32 @@
 <dialog id="settings">
   <form method="dialog" class="sheet">
     <h2>Settings</h2>
-
     <p class="muted">
-      This page is static — there is no server behind it. Demo mode answers from
-      canned responses. To run the compiler for real you either bring your own API
-      key, or point it at a backend you control.
+      Demo mode answers from the library's own tags and search, with no model and no
+      network. Connect a model for better handling of unusual phrasing.
     </p>
-
     <label class="field">
-      <span>Compiler backend</span>
+      <span>Answering backend</span>
       <select id="mode-select">
-        <option value="demo">Demo — canned responses, no key, no network</option>
+        <option value="demo">Demo — search only, no key, no network</option>
         <option value="direct">Direct — this browser calls the Claude API with your key</option>
         <option value="proxy">Proxy — your own endpoint holds the key</option>
       </select>
     </label>
-
     <div id="key-field" class="field" hidden>
       <label for="api-key"><span>Anthropic API key</span></label>
       <input id="api-key" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
       <p class="warn">
-        <b>Read this before pasting a key.</b> In Direct mode the key is stored in
-        this browser's <code>localStorage</code> and sent from the page itself, so
-        anyone who can open devtools on this device can read it. That is acceptable
-        for a personal tool with your own key — it is not acceptable for a key with
-        broad access, a shared machine, or a key you also use in production. Use a
-        dedicated, rotatable key, or use Proxy mode. The key is never sent anywhere
-        except <code>api.anthropic.com</code>.
+        In Direct mode the key is stored in this browser and sent from the page itself,
+        so anyone with devtools on this device can read it. Personal use only; use a
+        dedicated, rotatable key or use Proxy mode.
       </p>
     </div>
-
     <div id="proxy-field" class="field" hidden>
       <label for="proxy-url"><span>Proxy endpoint URL</span></label>
-      <input id="proxy-url" type="url" placeholder="https://your-worker.workers.dev" spellcheck="false">
-      <p class="muted">
-        POSTs <code>{system, user, max_tokens, model}</code> and reads back streamed
-        text or <code>{text}</code>. A ready-to-deploy Cloudflare Worker is in
-        <code>proxy/worker.js</code> in the repo.
-      </p>
+      <input id="proxy-url" type="url" placeholder="https://your-endpoint.example" spellcheck="false">
+      <p class="muted">POSTs <code>{system, user, max_tokens, model}</code> and reads back text. See <code>proxy/worker.js</code>.</p>
     </div>
-
     <div class="row">
       <button class="btn" value="save" id="save-settings">Save</button>
       <button class="btn ghost" value="cancel">Cancel</button>
@@ -87,14 +65,12 @@
 
 <footer id="foot">
   <div class="bar" style="display:block">
-    Compiled from the deliverables in <code>raw/</code> by an LLM; consistency checked by
-    the same rules as <code>tools/wiki.py lint</code>. The linter checks that links resolve
-    and citations point at real deliverables — <b>not</b> that any page is true. All
-    clients and figures are synthetic.
+    Demo data. Every client, deliverable and person here is synthetic.
     <span id="foot-links"></span>
   </div>
 </footer>
 
+<script src="config.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

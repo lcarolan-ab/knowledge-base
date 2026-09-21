@@ -1,6 +1,7 @@
-// worker.js — optional backend for the LLM wiki app.
+// worker.js — optional non-Azure backend for the deliverables library (Cloudflare Worker).
 //
-// GitHub Pages is static, so the app's default mode asks each visitor for their
+// On Azure Static Web Apps use api/ instead; this is for GitHub Pages or any other
+// static host. GitHub Pages is static, so the app's default mode asks each visitor for their
 // own API key and calls Claude straight from the browser. That is fine for a
 // personal tool and wrong for anything with real users: the key is readable by
 // anyone with devtools on that device.

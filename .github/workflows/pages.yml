@@ -1,4 +1,4 @@
-name: build and publish the LLM wiki
+name: publish the demo to GitHub Pages
 
 on:
   push:
@@ -24,38 +24,19 @@ jobs:
         with: { python-version: '3.11' }
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-
-      # The linters are the gate. Publishing a wiki that fails its own
-      # invariants would defeat the point of having them.
-      - name: Test the Python tooling
-        run: python3 tools/test_wiki.py
-
-      - name: Lint the wiki
-        run: python3 tools/wiki.py lint
-
-      - name: Check nothing needs recompiling
-        run: python3 tools/wiki.py status
-
-      - name: Rebuild the app's seed data from wiki/
-        run: python3 tools/build_app.py
-
+      - name: Validate the library records
+        run: python3 tools/test_library.py && python3 tools/build_library.py --check
+      - name: Build the catalogue
+        run: python3 tools/build_library.py
       - name: Test the app logic
         run: node tools/test_app.mjs
-
-      - name: Build the app (site root)
+      - name: Assemble the site
         run: |
-          mkdir -p site
-          cp -R app/. site/
-          touch site/.nojekyll
-
-      - name: Build the no-JavaScript archive (site/read)
-        run: python3 tools/build_site.py --out site/read
-
+          mkdir -p site && cp -R app/. site/ && rm -f site/staticwebapp.config.json && touch site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with: { path: site }
 
   deploy:
-    # Only publish from main; pull requests run the checks above and stop.
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
