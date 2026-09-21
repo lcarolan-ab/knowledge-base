@@ -9,9 +9,8 @@ date: 2026-03
 format: slides
 pages: 20
 file: files/cash-flow-family-2026.pptx
-author: Daniel Okafor
-author_role: Planner, Financial Planning
-author_email: daniel.okafor@example.com
+author: Rachel Malin, CPA
+author_role: Client Service Associate
 contributors: []
 ---
 

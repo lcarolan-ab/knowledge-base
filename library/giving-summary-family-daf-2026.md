@@ -9,10 +9,10 @@ date: 2026-04
 format: pdf
 pages: 8
 file: files/giving-summary-family-daf-2026.pdf
-author: Hannah Lindqvist
-author_role: Director, Philanthropy Advisory
-author_email: hannah.lindqvist@example.com
-contributors: []
+author: Voula Francis, JD, CFP, TEP
+author_role: Principal
+contributors:
+  - Klaire Whiteside, CFP
 ---
 
 Tax-year summary of $23,800 of giving that produced almost no tax benefit because

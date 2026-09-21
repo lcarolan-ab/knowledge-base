@@ -87,9 +87,9 @@ class LintTest(unittest.TestCase):
         self.write("good", GOOD.replace("type: Credit card analysis", "type: Horoscope"))
         self.assertFlags("type 'Horoscope' not in taxonomy")
 
-    def test_missing_author_email(self):
+    def test_author_email_is_optional(self):
         self.write("good", GOOD.replace("author_email: ada@example.com\n", ""))
-        self.assertFlags("missing 'author_email'")
+        self.assertEqual(self.errors(), [])
 
     def test_bad_email(self):
         self.write("good", GOOD.replace("ada@example.com", "ada at example"))
@@ -117,9 +117,11 @@ class LintTest(unittest.TestCase):
         self.write("good", GOOD.replace("A summary long enough to count as a real summary of what the deliverable found and\nwhat it recommended for the client in question, in plain words.", "Too short."))
         self.assertFlags("summary is under 20 words")
 
-    def test_contributor_format(self):
+    def test_contributor_may_omit_email_but_a_bad_one_is_flagged(self):
         self.write("good", GOOD.replace("Bo Example <bo@example.com>", "Bo Example"))
-        self.assertFlags("must be 'Name <email>'")
+        self.assertEqual(self.errors(), [])
+        self.write("good", GOOD.replace("Bo Example <bo@example.com>", "Bo Example <not an email>"))
+        self.assertFlags("must be 'Name' or 'Name <email>'")
 
 
 if __name__ == "__main__":

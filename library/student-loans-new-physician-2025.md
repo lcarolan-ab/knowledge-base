@@ -9,9 +9,8 @@ date: 2025-11
 format: slides
 pages: 19
 file: files/student-loans-new-physician-2025.pptx
-author: Daniel Okafor
-author_role: Planner, Financial Planning
-author_email: daniel.okafor@example.com
+author: Rachel Malin, CPA
+author_role: Client Service Associate
 contributors: []
 ---
 

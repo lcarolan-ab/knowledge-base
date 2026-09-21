@@ -9,10 +9,10 @@ date: 2026-03
 format: slides
 pages: 31
 file: files/estate-review-founder-2026.pptx
-author: Wei Zhang
-author_role: Wealth Strategist
-author_email: wei.zhang@example.com
-contributors: [Hannah Lindqvist <hannah.lindqvist@example.com>]
+author: Gavin Coveney, JD
+author_role: Client Service Associate
+contributors:
+  - Voula Francis, JD, CFP, TEP
 ---
 
 For a household with 48% of investable assets in one low-basis stock. Recommends a

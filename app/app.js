@@ -1,4 +1,4 @@
-// app.js — the deliverables library: ask what exists, find the deck, find the person.
+// app.js — the deliverables library: ask what exists, find the deck, see who made it.
 
 import * as S from './lib/search.js';
 import * as P from './lib/provider.js';
@@ -24,18 +24,12 @@ const State = { data: null, source: 'demo file', thread: [] };
 
 // ------------------------------------------------------------------ pieces
 
-function person(p, { compact = false, sub = '' } = {}) {
+function person(p, { sub = '' } = {}) {
   if (!p?.name) return null;
-  const links = el('span', { class: 'links' });
-  if (p.email) {
-    links.append(el('a', { href: `mailto:${p.email}` }, 'Email'));
-    links.append(el('a', { href: S.teamsLink(p.email), target: '_blank', rel: 'noopener' }, 'Teams'));
-  }
   return el('div', { class: 'person' },
     el('span', { class: 'avatar', 'aria-hidden': 'true' }, S.initials(p.name)),
     el('span', { class: 'who' }, el('b', {}, p.name),
-      el('span', {}, [p.role, sub].filter(Boolean).join(' · ') || (compact ? '' : p.email))),
-    links);
+      el('span', {}, [p.role, sub].filter(Boolean).join(' · '))));
 }
 
 function card(item, { why = null, list = false } = {}) {
@@ -59,27 +53,11 @@ function card(item, { why = null, list = false } = {}) {
       ...item.topics.slice(0, 4).map(t => el('span', { class: 'muted' }, t))),
     why ? el('div', { class: 'why' }, `Matched: ${why}`) : null,
     person(item.author),
-    ...(item.contributors || []).map(c => person({ ...c, role: 'contributor' }, { compact: true })),
+    ...(item.contributors || []).map(c => person({ ...c, role: 'contributor' })),
     el('div', { class: 'actions' },
       el('a', { href: item.file || '#', target: item.file ? '_blank' : null, rel: 'noopener' }, 'Open'),
       (item.outline || []).length ? toggle : null),
     outline);
-}
-
-function peopleRow(results) {
-  const ppl = S.people(results);
-  if (!ppl.length) return null;
-  const wrap = el('div', {}, el('h2', {}, 'People to contact'));
-  const grid = el('div', { class: 'people' });
-  for (const p of ppl) {
-    const titles = [...new Set(p.items.map(i => i.title))];
-    grid.append(el('div', { class: 'card' },
-      person(p),
-      el('div', { class: 'sub' }, `${p.items.some(i => i.role === 'author') ? 'Authored' : 'Contributed to'}: ` +
-        titles.slice(0, 2).join('; ') + (titles.length > 2 ? ` and ${titles.length - 2} more` : ''))));
-  }
-  wrap.append(grid);
-  return wrap;
 }
 
 // --------------------------------------------------------------------- ask
@@ -132,8 +110,6 @@ VIEWS.ask = () => {
         : close ? `${results.length} close matches` : `${results.length} related deliverables`;
       turn.append(el('h2', {}, heading));
       turn.append(el('div', { class: 'cards list' }, ...results.map(r => card(r.item, { why: r.why }))));
-      const pr = peopleRow(results.map(r => ({ item: r.item })));
-      if (pr) turn.append(pr);
     }
     go.disabled = false;
     input.focus();
@@ -154,8 +130,8 @@ VIEWS.ask = () => {
   return el('div', {},
     el('div', { class: 'hero' },
       el('h1', {}, 'What have we already made?'),
-      el('p', {}, `Ask in plain language. You get the closest existing deliverables and the people ` +
-        `who made them, so you can reuse the work or reach out directly. ` +
+      el('p', {}, `Ask in plain language. You get the closest existing deliverables and who made ` +
+        `them, so you can reuse the work or go straight to the right person. ` +
         `${State.data.items.length} deliverables in the library${State.source === 'demo file' ? '' : ` from ${State.source}`}.`)),
     el('div', { class: 'askbox' }, input, go),
     examples, thread);
@@ -189,38 +165,6 @@ VIEWS.browse = () => {
     el('p', { class: 'muted' }, 'Every deliverable, newest first. Filter by type, audience or year.'),
     el('div', { class: 'filters' }, f.text, f.type, f.audience, f.year),
     count, grid);
-};
-
-// ------------------------------------------------------------------ people
-
-VIEWS.people = () => {
-  const byEmail = new Map();
-  for (const it of State.data.items) {
-    const add = (p, role) => {
-      if (!p?.email && !p?.name) return;
-      const k = p.email || p.name;
-      const rec = byEmail.get(k) || { ...p, authored: [], contributed: [] };
-      if (!rec.role && p.role) rec.role = p.role;
-      rec[role].push(it);
-      byEmail.set(k, rec);
-    };
-    add(it.author, 'authored');
-    (it.contributors || []).forEach(c => add(c, 'contributed'));
-  }
-  const ppl = [...byEmail.values()].sort((a, b) => b.authored.length - a.authored.length);
-  const grid = el('div', { class: 'people' });
-  for (const p of ppl) {
-    const types = [...new Set(p.authored.map(i => i.type))];
-    grid.append(el('div', { class: 'card' },
-      person(p),
-      el('div', { class: 'sub' }, `${p.authored.length} authored${p.contributed.length ? `, ${p.contributed.length} contributed` : ''}` +
-        (types.length ? ` · ${types.join(', ')}` : '')),
-      el('div', { class: 'sub' }, p.authored.slice(0, 3).map(i => i.title).join(' · '))));
-  }
-  return el('div', {},
-    el('h1', {}, 'People'),
-    el('p', { class: 'muted' }, 'Who has made what. Email or message them directly.'),
-    grid);
 };
 
 // ------------------------------------------------------------------ router

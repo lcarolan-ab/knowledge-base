@@ -9,9 +9,8 @@ date: 2026-01
 format: slides
 pages: 16
 file: files/cc-analysis-retired-couple-2026.pptx
-author: Priya Natarajan
-author_role: Associate, Client Analytics
-author_email: priya.natarajan@example.com
+author: Andrew Stange, CFA
+author_role: Associate
 contributors: []
 ---
 

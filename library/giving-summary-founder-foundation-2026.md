@@ -9,10 +9,11 @@ date: 2026-06
 format: pdf
 pages: 11
 file: files/giving-summary-founder-foundation-2026.pdf
-author: Hannah Lindqvist
-author_role: Director, Philanthropy Advisory
-author_email: hannah.lindqvist@example.com
-contributors: [Wei Zhang <wei.zhang@example.com>]
+author: Voula Francis, JD, CFP, TEP
+author_role: Principal
+contributors:
+  - Klaire Whiteside, CFP
+  - Gavin Coveney, JD
 ---
 
 Summary of $412,000 of family philanthropy: $250,000 of foundation grants, $110,000 of

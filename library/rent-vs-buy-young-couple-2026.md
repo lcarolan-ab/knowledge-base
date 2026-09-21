@@ -9,9 +9,8 @@ date: 2026-02
 format: spreadsheet
 pages: 1
 file: files/rent-vs-buy-young-couple-2026.xlsx
-author: Marcus Bell
-author_role: Senior Analyst, Client Analytics
-author_email: marcus.bell@example.com
+author: Andrew Ogle, CPA
+author_role: Manager
 contributors: []
 ---
 

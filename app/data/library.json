@@ -452,11 +452,16 @@
    "pages": 12,
    "file": "files/performance-summary-family-trust-2026q2.pptx",
    "author": {
-    "name": "Tom Reyes",
-    "role": "Portfolio Analyst, Investments",
-    "email": "tom.reyes@example.com"
+    "name": "Anna Sears, CFA",
+    "role": "Principal",
+    "email": ""
    },
-   "contributors": [],
+   "contributors": [
+    {
+     "name": "Stephen Cooper, CFA",
+     "email": ""
+    }
+   ],
    "summary": "Quarter in which the trust sold $1 million of holdings to fund a house purchase. Realised gains were $118,000 against $210,000 estimated, because high-basis lots were sold first. Year-to-date return of 3.8% against 4.6% for the benchmark, explained by cash held for the closing and an international underweight. Standard quarterly format.",
    "outline": [
     "Position at quarter end",
@@ -486,14 +491,18 @@
    "pages": 4,
    "file": "files/spend-categorisation-standard-v3-2026.docx",
    "author": {
-    "name": "Marcus Bell",
-    "role": "Senior Analyst, Client Analytics",
-    "email": "marcus.bell@example.com"
+    "name": "Andrew Ogle, CPA",
+    "role": "Manager",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Hannah Lindqvist",
-     "email": "hannah.lindqvist@example.com"
+     "name": "Logan Carolan",
+     "email": ""
+    },
+    {
+     "name": "Voula Francis, JD, CFP, TEP",
+     "email": ""
     }
    ],
    "summary": "The rules every credit card analysis follows from Q3 2026: category definitions, the new \"events and memberships\" category for charity galas and auction purchases, the 90-day definition of an unused subscription, and the 1.5-cents-per-point default for rewards. Analyses produced under version 2 are not restated.",
@@ -526,14 +535,18 @@
    "pages": 11,
    "file": "files/giving-summary-founder-foundation-2026.pdf",
    "author": {
-    "name": "Hannah Lindqvist",
-    "role": "Director, Philanthropy Advisory",
-    "email": "hannah.lindqvist@example.com"
+    "name": "Voula Francis, JD, CFP, TEP",
+    "role": "Principal",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Wei Zhang",
-     "email": "wei.zhang@example.com"
+     "name": "Klaire Whiteside, CFP",
+     "email": ""
+    },
+    {
+     "name": "Gavin Coveney, JD",
+     "email": ""
     }
    ],
    "summary": "Summary of $412,000 of family philanthropy: $250,000 of foundation grants, $110,000 of donor-advised fund grants funded with appreciated company stock, and $52,000 of direct gifts. Giving in shares avoided about $96,000 of capital gains. The foundation's 14% administrative cost ratio is the problem; recommends routing grants under $25,000 through the DAF and consolidating grantees.",
@@ -565,14 +578,18 @@
    "pages": 26,
    "file": "files/cash-flow-retired-owners-2026.pptx",
    "author": {
-    "name": "Daniel Okafor",
-    "role": "Planner, Financial Planning",
-    "email": "daniel.okafor@example.com"
+    "name": "Rachel Malin, CPA",
+    "role": "Client Service Associate",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Tom Reyes",
-     "email": "tom.reyes@example.com"
+     "name": "Greg Stokke, CFA, CFP",
+     "email": ""
+    },
+    {
+     "name": "Anna Sears, CFA",
+     "email": ""
     }
    ],
    "summary": "Revision of a November 2025 projection after the clients decided to buy a $1.9 million lake house. Shows the net portfolio draw rising from 2.1% to 3.5%, at the firm's sustainability ceiling, and recommends liquidating $1 million of high-basis lots and borrowing $900,000 on a pledged-asset line rather than selling appreciated holdings. Includes a Roth conversion window before required distributions begin.",
@@ -605,11 +622,16 @@
    "pages": 8,
    "file": "files/giving-summary-family-daf-2026.pdf",
    "author": {
-    "name": "Hannah Lindqvist",
-    "role": "Director, Philanthropy Advisory",
-    "email": "hannah.lindqvist@example.com"
+    "name": "Voula Francis, JD, CFP, TEP",
+    "role": "Principal",
+    "email": ""
    },
-   "contributors": [],
+   "contributors": [
+    {
+     "name": "Klaire Whiteside, CFP",
+     "email": ""
+    }
+   ],
    "summary": "Tax-year summary of $23,800 of giving that produced almost no tax benefit because itemised deductions barely cleared the standard deduction. Recommends bunching two years of giving into the donor-advised fund in one year and contributing appreciated RSU shares rather than cash. Works through the deductible portion of a charity gala table.",
    "outline": [
     "Giving by vehicle and what was deductible",
@@ -641,9 +663,9 @@
    "pages": 20,
    "file": "files/cash-flow-family-2026.pptx",
    "author": {
-    "name": "Daniel Okafor",
-    "role": "Planner, Financial Planning",
-    "email": "daniel.okafor@example.com"
+    "name": "Rachel Malin, CPA",
+    "role": "Client Service Associate",
+    "email": ""
    },
    "contributors": [],
    "summary": "Projection for a household with $612,000 of income, $132,000 of it RSU vesting that ends in 2028. Base-case savings capacity of about $108,000 a year falls to $44,000 if both children move to independent school, and turns negative from 2029 after the vesting cliff unless spending adjusts. Recommends funding 401(k)s and 529s while the vesting lasts and holding six months of spend in cash.",
@@ -677,14 +699,14 @@
    "pages": 31,
    "file": "files/estate-review-founder-2026.pptx",
    "author": {
-    "name": "Wei Zhang",
-    "role": "Wealth Strategist",
-    "email": "wei.zhang@example.com"
+    "name": "Gavin Coveney, JD",
+    "role": "Client Service Associate",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Hannah Lindqvist",
-     "email": "hannah.lindqvist@example.com"
+     "name": "Voula Francis, JD, CFP, TEP",
+     "email": ""
     }
    ],
    "summary": "For a household with 48% of investable assets in one low-basis stock. Recommends a 10b5-1 plan selling 10% of the holding a year, a two-year GRAT funded with shares, moving a $10 million second-to-die policy into an ILIT, and making all charitable gifts in shares. Liquidity buffer of 14 months is adequate but eroding at the current spending growth rate.",
@@ -720,14 +742,14 @@
    "pages": 22,
    "file": "files/cc-analysis-family-2026.pptx",
    "author": {
-    "name": "Marcus Bell",
-    "role": "Senior Analyst, Client Analytics",
-    "email": "marcus.bell@example.com"
+    "name": "Andrew Ogle, CPA",
+    "role": "Manager",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Priya Natarajan",
-     "email": "priya.natarajan@example.com"
+     "name": "Andrew Stange, CFA",
+     "email": ""
     }
    ],
    "summary": "Full-year review of $187,000 of card spend across three cards for a two-earner household with two children. Found nine unused subscriptions ($2,340 a year), 412,000 unredeemed points, and dining growing 22% year on year. Recommends consolidating to two cards, redeeming points before the next devaluation, and a travel budget. The categorisation follows version 2 of the firm's standard; the charitable line needs the giving team's treatment of a gala table.",
@@ -762,9 +784,9 @@
    "pages": 1,
    "file": "files/rent-vs-buy-young-couple-2026.xlsx",
    "author": {
-    "name": "Marcus Bell",
-    "role": "Senior Analyst, Client Analytics",
-    "email": "marcus.bell@example.com"
+    "name": "Andrew Ogle, CPA",
+    "role": "Manager",
+    "email": ""
    },
    "contributors": [],
    "summary": "Interactive model for a couple in their late twenties with $120,000 saved, comparing renting against buying a $650,000 condo over seven years. Buying wins only if they stay past year five and rents rise more than 3% a year; the down payment would also drain the emergency fund, which is the main argument for waiting eighteen months.",
@@ -796,9 +818,9 @@
    "pages": 16,
    "file": "files/cc-analysis-retired-couple-2026.pptx",
    "author": {
-    "name": "Priya Natarajan",
-    "role": "Associate, Client Analytics",
-    "email": "priya.natarajan@example.com"
+    "name": "Andrew Stange, CFA",
+    "role": "Associate",
+    "email": ""
    },
    "contributors": [],
    "summary": "Review of $96,000 of annual card spend for a retired couple, 44% of it travel including a six-week trip paid on a card with a 3% foreign transaction fee and no travel insurance. Recommends moving travel to a no-fee card with primary travel cover, cancelling four unused subscriptions, submitting $2,200 of unclaimed medical receipts, and redeeming 180,000 points. Two fraudulent charges were caught and recovered.",
@@ -830,14 +852,14 @@
    "pages": 17,
    "file": "files/equity-comp-primer-tech-2026.pptx",
    "author": {
-    "name": "Wei Zhang",
-    "role": "Wealth Strategist",
-    "email": "wei.zhang@example.com"
+    "name": "Gavin Coveney, JD",
+    "role": "Client Service Associate",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Daniel Okafor",
-     "email": "daniel.okafor@example.com"
+     "name": "Rachel Malin, CPA",
+     "email": ""
     }
    ],
    "summary": "Explains RSUs, ISOs and the ESPP for a 28-year-old engineer whose company stock is now 35% of net worth. Covers what is taxed when, why RSUs are taxed like salary at vest, the AMT trap on ISOs, and a sell-at-vest default with a written exception process. Reusable as a template for other tech-employee clients.",
@@ -870,14 +892,14 @@
    "pages": 9,
    "file": "files/insurance-review-family-2025.pdf",
    "author": {
-    "name": "Tom Reyes",
-    "role": "Portfolio Analyst, Investments",
-    "email": "tom.reyes@example.com"
+    "name": "Liz Goldenberg, CPA",
+    "role": "Client team lead",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Wei Zhang",
-     "email": "wei.zhang@example.com"
+     "name": "Gavin Coveney, JD",
+     "email": ""
     }
    ],
    "summary": "Found the household under-insured on term life (coverage at 4x income against a need of about 12x while the children are young) and with no own-occupation disability cover for the higher earner. Recommends a 20-year level term policy, an own-occupation disability policy, and raising the umbrella limit. Reviews beneficiary designations against the estate documents.",
@@ -909,9 +931,9 @@
    "pages": 19,
    "file": "files/student-loans-new-physician-2025.pptx",
    "author": {
-    "name": "Daniel Okafor",
-    "role": "Planner, Financial Planning",
-    "email": "daniel.okafor@example.com"
+    "name": "Rachel Malin, CPA",
+    "role": "Client Service Associate",
+    "email": ""
    },
    "contributors": [],
    "summary": "For a resident with $310,000 of federal loans moving to an attending salary of $340,000. Compares Public Service Loan Forgiveness at a non-profit hospital against refinancing at a private practice, with the income jump modelled year by year. The forgiveness path wins by about $95,000 if the client stays in qualifying employment for the remaining five years; refinancing wins if they leave within two.",
@@ -945,14 +967,14 @@
    "pages": 18,
    "file": "files/cash-flow-new-grad-2025.pptx",
    "author": {
-    "name": "Daniel Okafor",
-    "role": "Planner, Financial Planning",
-    "email": "daniel.okafor@example.com"
+    "name": "Rachel Malin, CPA",
+    "role": "Client Service Associate",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Priya Natarajan",
-     "email": "priya.natarajan@example.com"
+     "name": "Andrew Stange, CFA",
+     "email": ""
     }
    ],
    "summary": "Companion to the new-graduate card analysis for the same client. Models a $78,000 starting salary, $41,000 of federal student loans, and rent in a high-cost city over five years. Compares standard repayment against an income-driven plan, shows that the employer 401(k) match beats extra loan payments in every scenario, and sets a savings order: match, emergency fund, then loans above 6%.",
@@ -986,14 +1008,14 @@
    "pages": 14,
    "file": "files/cc-analysis-new-grad-2025.pptx",
    "author": {
-    "name": "Priya Natarajan",
-    "role": "Associate, Client Analytics",
-    "email": "priya.natarajan@example.com"
+    "name": "Andrew Stange, CFA",
+    "role": "Associate",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Marcus Bell",
-     "email": "marcus.bell@example.com"
+     "name": "Andrew Ogle, CPA",
+     "email": ""
     }
    ],
    "summary": "Built for a 23-year-old starting a first job at $78,000 with one student card and a thin credit file. Recommends a two-card setup (a no-fee cash-back card for everyday spend and a starter travel card once the file is six months older), a payment automation rule so utilisation stays under 10%, and a $3,000 starter emergency fund before any rewards optimisation. Includes a one-page \"first year\" checklist the client can follow without us.",
@@ -1027,14 +1049,14 @@
    "pages": 6,
    "file": "files/benefits-election-new-hire-2025.docx",
    "author": {
-    "name": "Priya Natarajan",
-    "role": "Associate, Client Analytics",
-    "email": "priya.natarajan@example.com"
+    "name": "Andrew Stange, CFA",
+    "role": "Associate",
+    "email": ""
    },
    "contributors": [
     {
-     "name": "Daniel Okafor",
-     "email": "daniel.okafor@example.com"
+     "name": "Rachel Malin, CPA",
+     "email": ""
     }
    ],
    "summary": "A reusable guide we send to clients starting a first job: how to read the benefits enrolment form, what to elect in the 401(k) (at least the match; Roth if in a low bracket), the HSA when a high-deductible plan is offered, and which employer insurance to take versus decline. Written for someone with no prior benefits experience.",

@@ -9,10 +9,10 @@ date: 2026-07
 format: slides
 pages: 12
 file: files/performance-summary-family-trust-2026q2.pptx
-author: Tom Reyes
-author_role: Portfolio Analyst, Investments
-author_email: tom.reyes@example.com
-contributors: []
+author: Anna Sears, CFA
+author_role: Principal
+contributors:
+  - Stephen Cooper, CFA
 ---
 
 Quarter in which the trust sold $1 million of holdings to fund a house purchase. Realised
