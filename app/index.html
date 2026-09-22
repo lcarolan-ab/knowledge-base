@@ -32,10 +32,7 @@
 <dialog id="settings">
   <form method="dialog" class="sheet">
     <h2>Settings</h2>
-    <p class="muted">
-      Demo mode answers from the library's own tags and search, with no model and no
-      network. Connect a model for better handling of unusual phrasing.
-    </p>
+    <p class="muted">Demo mode searches the library's tags. Connect a model for better handling of unusual phrasing.</p>
     <label class="field">
       <span>Answering backend</span>
       <select id="mode-select">
@@ -47,16 +44,12 @@
     <div id="key-field" class="field" hidden>
       <label for="api-key"><span>Anthropic API key</span></label>
       <input id="api-key" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
-      <p class="warn">
-        In Direct mode the key is stored in this browser and sent from the page itself,
-        so anyone with devtools on this device can read it. Personal use only; use a
-        dedicated, rotatable key or use Proxy mode.
-      </p>
+      <p class="warn">Stored in this browser only. Personal use; prefer Proxy mode for anything shared.</p>
     </div>
     <div id="proxy-field" class="field" hidden>
       <label for="proxy-url"><span>Proxy endpoint URL</span></label>
       <input id="proxy-url" type="url" placeholder="https://your-endpoint.example" spellcheck="false">
-      <p class="muted">POSTs <code>{system, user, max_tokens, model}</code> and reads back text. See <code>proxy/worker.js</code>.</p>
+      <p class="muted">On Azure Static Web Apps this is <code>/api/ask</code>.</p>
     </div>
     <div class="row">
       <button class="btn" value="save" id="save-settings">Save</button>
@@ -66,7 +59,7 @@
 </dialog>
 
 <footer id="foot">
-  Demo data. The deliverables and clients are synthetic.
+  Demo · synthetic deliverables
   <span id="foot-links"></span>
 </footer>
 
