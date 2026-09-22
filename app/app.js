@@ -24,39 +24,35 @@ const State = { data: null, source: 'demo file', thread: [] };
 
 // ------------------------------------------------------------------ pieces
 
-function person(p, { sub = '' } = {}) {
+function person(p, contributors = []) {
   if (!p?.name) return null;
+  const withNames = contributors.map(c => c.name.split(',')[0]).filter(Boolean);
   return el('div', { class: 'person' },
     el('span', { class: 'avatar', 'aria-hidden': 'true' }, S.initials(p.name)),
-    el('span', { class: 'who' }, el('b', {}, p.name),
-      el('span', {}, [p.role, sub].filter(Boolean).join(' · '))));
+    el('span', { class: 'who' },
+      el('b', {}, p.name), p.role ? el('span', {}, ` · ${p.role}`) : null,
+      withNames.length ? el('span', { class: 'with' }, ` · with ${withNames.join(', ')}`) : null));
 }
 
-function card(item, { why = null, list = false } = {}) {
-  const outline = el('ul', { class: 'outline', hidden: true },
-    ...(item.outline || []).map(o => el('li', {}, o)));
-  const toggle = el('a', { href: '#', onclick: e => {
-    e.preventDefault(); outline.hidden = !outline.hidden;
-    toggle.textContent = outline.hidden ? 'Show outline' : 'Hide outline';
-  } }, 'Show outline');
+function card(item, { matched = [], why = null } = {}) {
   const pages = item.pages ? `${item.pages} ${item.format === 'slides' ? 'slides' : item.format === 'spreadsheet' ? 'sheet' : 'pages'}` : item.format;
+  const href = item.file || '#';
+  const open = { href, target: item.file ? '_blank' : null, rel: 'noopener',
+    title: item.file?.startsWith('http') ? '' : 'Demo placeholder — in production this opens the file in SharePoint' };
+  const outline = el('ul', { class: 'outline', hidden: true }, ...(item.outline || []).map(o => el('li', {}, o)));
+  const toggle = el('a', { href: '#', class: 'quiet', onclick: e => { e.preventDefault(); outline.hidden = !outline.hidden; } }, 'Outline');
+  const tags = [...item.audiences, ...item.topics.filter(t => !item.audiences.includes(t)).slice(0, 3)];
   return el('article', { class: 'card' },
     el('div', { class: 'top' },
       el('span', { class: 'badge type' }, item.type || 'Deliverable'),
-      el('span', {}, S.monthName(item.date)), el('span', {}, '·'), el('span', {}, pages),
-      item.client ? [el('span', {}, '·'), el('span', {}, item.client)] : null),
-    el('h3', {}, el('a', { href: item.file || '#', target: item.file ? '_blank' : null, rel: 'noopener',
-      title: item.file?.startsWith('http') ? item.file : 'Demo placeholder — in production this opens the file in SharePoint' },
-      item.title)),
+      el('span', { class: 'when' }, `${S.monthName(item.date)} · ${pages}`)),
+    el('h3', {}, el('a', open, item.title)),
     el('p', { class: 'sum' }, item.summary),
-    el('div', { class: 'tags' }, ...item.audiences.map(a => el('span', {}, a)),
-      ...item.topics.slice(0, 4).map(t => el('span', { class: 'muted' }, t))),
-    why ? el('div', { class: 'why' }, `Matched: ${why}`) : null,
-    person(item.author),
-    ...(item.contributors || []).map(c => person({ ...c, role: 'contributor' })),
-    el('div', { class: 'actions' },
-      el('a', { href: item.file || '#', target: item.file ? '_blank' : null, rel: 'noopener' }, 'Open'),
-      (item.outline || []).length ? toggle : null),
+    el('div', { class: 'tags' }, ...tags.map(t => el('span', { class: matched.includes(t) ? 'hit' : '' }, t))),
+    why ? el('div', { class: 'why' }, why) : null,
+    el('div', { class: 'foot' },
+      person(item.author, item.contributors),
+      el('span', { class: 'links' }, (item.outline || []).length ? toggle : null, el('a', open, 'Open'))),
     outline);
 }
 
@@ -75,16 +71,15 @@ VIEWS.ask = () => {
     if (!q) return;
     input.value = q;
     go.disabled = true;
-    const turn = el('section', { class: 'turn' },
-      el('div', { class: 'q' }, 'You asked ', el('b', {}, q)));
+    const turn = el('section', { class: 'turn' }, el('div', { class: 'q' }, q));
     const answer = el('div', { class: 'answer streaming' }, el('span', { class: 'muted' }, 'Looking through the library…'));
     turn.append(answer);
     thread.prepend(turn);
 
     const found = S.search(State.data, q);
     let text = S.templateAnswer(q, found);
-    let results = found.results.map(r => ({ item: r.item, why: r.reasons.join(', '), strong: r.strong }));
-    let src = 'Answered by the library’s own search (demo mode).';
+    let results = found.results.map(r => ({ item: r.item, matched: r.reasons.filter(x => !x.startsWith('mentions ')), strong: r.strong }));
+    let src = '';
     try {
       const raw = await P.ask({ question: q, data: State.data });
       if (raw !== null) {
@@ -92,9 +87,8 @@ VIEWS.ask = () => {
         if (parsed.ok) {
           text = parsed.answer;
           results = parsed.matches.map((m, i) => ({ item: m.item, why: m.reason, strong: i === 0 }));
-          src = `Answered by ${P.MODEL} over the catalogue.`;
         } else {
-          src = `The model’s reply could not be read (${parsed.error}); showing the search result instead.`;
+          src = 'The model’s reply could not be read; showing the search result instead.';
         }
       }
     } catch (e) {
@@ -102,14 +96,14 @@ VIEWS.ask = () => {
     }
 
     answer.className = 'answer';
-    answer.innerHTML = `<div>${md(text)}</div><div class="src">${esc(src)}</div>`;
+    answer.innerHTML = `<div>${md(text)}</div>${src ? `<div class="src">${esc(src)}</div>` : ''}`;
     if (results.length) {
       const close = results.filter(r => r.strong).length;
       const heading = results.length === 1 ? 'The deliverable'
         : close && close < results.length ? `${close} close match${close === 1 ? '' : 'es'}, ${results.length - close} related`
         : close ? `${results.length} close matches` : `${results.length} related deliverables`;
       turn.append(el('h2', {}, heading));
-      turn.append(el('div', { class: 'cards list' }, ...results.map(r => card(r.item, { why: r.why }))));
+      turn.append(el('div', { class: 'cards list' }, ...results.map(r => card(r.item, { matched: r.matched || [], why: r.why }))));
     }
     go.disabled = false;
     input.focus();
@@ -119,20 +113,17 @@ VIEWS.ask = () => {
   input.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
 
   const examples = el('div', { class: 'examples' });
-  for (const q of ['Have we ever done a credit card analysis for a new grad?',
-                   'Who has worked on student loans for a doctor?',
-                   'What do we have for a founder with a lot of company stock?',
-                   'Anything on buying a first home?',
-                   'Have we done a cash flow for someone retiring to Portugal?']) {
+  for (const q of ['Credit card analysis for a new grad',
+                   'Student loans for a doctor',
+                   'Founder with concentrated stock',
+                   'Buying a first home']) {
     examples.append(el('button', { onclick: () => ask(q) }, q));
   }
 
   return el('div', {},
     el('div', { class: 'hero' },
       el('h1', {}, 'What have we already made?'),
-      el('p', {}, `Ask in plain language. You get the closest existing deliverables and who made ` +
-        `them, so you can reuse the work or go straight to the right person. ` +
-        `${State.data.items.length} deliverables in the library${State.source === 'demo file' ? '' : ` from ${State.source}`}.`)),
+      el('p', {}, 'Search the firm’s deliverables in plain language.')),
     el('div', { class: 'askbox' }, input, go),
     examples, thread);
 };
@@ -161,8 +152,7 @@ VIEWS.browse = () => {
   Object.values(f).forEach(c => c.addEventListener('input', render));
   render();
   return el('div', {},
-    el('h1', {}, 'Browse the library'),
-    el('p', { class: 'muted' }, 'Every deliverable, newest first. Filter by type, audience or year.'),
+    el('h1', {}, 'Browse'),
     el('div', { class: 'filters' }, f.text, f.type, f.audience, f.year),
     count, grid);
 };
@@ -185,7 +175,7 @@ const Router = {
 function syncModeChip() {
   const mode = P.getMode();
   const chip = $('#mode-chip');
-  chip.textContent = { demo: 'demo · search only', direct: 'live · your key', proxy: 'live · proxy' }[mode];
+  chip.textContent = { demo: 'Demo', direct: 'Live', proxy: 'Live' }[mode];
   chip.className = 'chip' + (mode === 'demo' ? '' : ' live');
 }
 
@@ -252,8 +242,6 @@ function finish() {
   const fl = $('#foot-links');
   if (State.data.repo && !fl.querySelector('.repo'))
     fl.append(el('a', { class: 'repo', href: State.data.repo, target: '_blank', rel: 'noopener' }, 'source on GitHub'));
-  if (State.source === 'demo file' && !fl.querySelector('.src'))
-    fl.append(el('span', { class: 'src' }, ` · catalogue built ${State.data.built}`));
   initSettings();
   syncModeChip();
   addEventListener('hashchange', () => Router.go());

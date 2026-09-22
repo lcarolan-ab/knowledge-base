@@ -141,27 +141,15 @@ export function filterItems(items, f = {}) {
 // A plain-language answer built from the search alone. This is what demo mode says
 // and what live mode falls back to if the model's reply cannot be parsed.
 export function templateAnswer(q, { parsed, results }) {
-  const asked = [...parsed.types, ...parsed.audiences, ...parsed.topics];
-  const askedText = asked.length ? asked.join(' · ') : (parsed.terms.join(' ') || 'that');
+  const fmt = it => `**${it.title}** (${monthName(it.date)}, ${it.author.name.split(',')[0]})`;
   const strong = results.filter(r => r.strong);
-  if (!results.length) {
-    return `No — nothing in the library covers ${askedText}. Nobody has filed a deliverable ` +
-      `on it yet, so this would be new work.`;
-  }
-  const fmt = it => `**${it.title}** (${monthName(it.date)}, ${it.author.name})`;
+  if (!results.length) return 'No. Nothing in the library covers that yet.';
   if (strong.length) {
     const [top, ...rest] = strong;
-    let s = `Yes. ${strong.length === 1 ? 'One deliverable matches' : `${strong.length} deliverables match`} ` +
-      `${askedText}. The closest is ${fmt(top.item)}, ${top.item.pages ? `${top.item.pages} ${top.item.format === 'slides' ? 'slides' : 'pages'}` : top.item.format}` +
-      `${top.item.client ? `, prepared for ${top.item.client}` : ''}.`;
-    if (rest.length) s += ` Also relevant: ${rest.slice(0, 2).map(r => fmt(r.item)).join('; ')}.`;
-    s += ` ${top.item.author.name} is the person to talk to.`;
-    return s;
+    return `Yes. The closest is ${fmt(top.item)}.` +
+      (rest.length ? ` ${rest.length === 1 ? 'One more' : `${rest.length} more`} close match${rest.length === 1 ? '' : 'es'} below.` : '');
   }
-  return `Not exactly. Nothing in the library is a ${askedText} as such, but the closest ` +
-    `related work is ${fmt(results[0].item)}` +
-    (results[1] ? ` and ${fmt(results[1].item)}` : '') +
-    `. Their authors would know whether a version for your case exists outside the library.`;
+  return `Not exactly. The closest related work is ${fmt(results[0].item)}.`;
 }
 
 export function monthName(ym) {
